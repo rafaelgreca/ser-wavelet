@@ -153,3 +153,30 @@ def save(
     os.makedirs(path, exist_ok=True)
     path = os.path.join(path, f"{name}.pth")
     torch.save(tensor, path)
+    
+def read_feature(
+    path: str,
+    fold: Union[int, None],
+    name: str
+) -> torch.Tensor:
+    """
+    Reads the saved feature.
+
+    Args:
+        path (str): the feature's folder path.
+        fold (int | None): which folder is it (None if kfold is not used).
+        name (str): the name of the feature.
+
+    Returns:
+        torch.Tensor: the read feature.
+    """
+    if not fold is None:
+        feature = torch.load(
+            os.path.join(path, f"fold{fold}", name)
+        )
+    else:
+        feature = torch.load(
+            os.path.join(path, name)
+        )
+    
+    return feature
