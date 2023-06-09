@@ -2,8 +2,57 @@ import torch
 import torchaudio
 import torch.nn.functional as F
 import pandas as pd
-from src.utils import one_hot_encoder
+import os
+from src.utils import save
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from typing import Tuple, List, Union
+
+def split_data(
+    X: torch.Tensor,
+    y: torch.Tensor,
+    dataset: str,
+    output_path: str,
+    k_fold: int = 0
+) -> None:
+    skf = None
+    
+    if k_fold > 0:
+        skf = StratifiedKFold(
+            n_splits=k_fold,
+            shuffle=True
+        )
+            
+        for i, (train_index, test_index) in enumerate(skf.split(X, y)):        
+            X_train = X[train_index, :, :]
+            y_train = y[train_index]
+            
+            X_valid = X[test_index, :, :]
+            y_valid = y[test_index]
+            
+            folder_path = os.path.join(output_path, dataset, f"fold{i}")
+            
+            save(path=folder_path, name="X_train", tensor=X_train)
+            save(path=folder_path, name="y_train", tensor=y_train)
+            
+            save(path=folder_path, name="X_valid", tensor=X_valid)
+            save(path=folder_path, name="y_valid", tensor=y_valid)
+            
+    else:
+        X_train, X_valid, y_train, y_valid = train_test_split(
+            X,
+            y,
+            test_size=0.2,
+            stratify=y,
+            shuffle=True
+        )
+            
+        folder_path = os.path.join(output_path, dataset)
+        
+        save(path=folder_path, name="X_train", tensor=X_train)
+        save(path=folder_path, name="y_train", tensor=y_train)
+        
+        save(path=folder_path, name="X_valid", tensor=X_valid)
+        save(path=folder_path, name="y_valid", tensor=y_valid)
 
 def normalize(
     samples: torch.Tensor
@@ -125,9 +174,8 @@ def processing(
     df: pd.DataFrame,
     to_mono: bool,
     sample_rate: int,
-    apply_one_hot_encoder: bool = True,
-    max_frames: Union[int, None] = None,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    max_samples: int
+) -> Tuple[torch.Tensor, torch.Tensor, int]:
     """
     Function responsible for the the processing step.
     It reads the audios (converts to mono and resamples, if necessary),
@@ -137,16 +185,13 @@ def processing(
         df (pd.DataFrame): the audios dataframe.
         to_mono (bool): if the audios should be converted to mono.
         sample_rate (int): the audios new sample rate.
-        apply_one_hot_encoder (bool, optional): if the one hot encoding
-                                                should be applied. Defaults to True.
-        max_frames (int): the maximum number of samples.
+        max_samples (int): the maximum samples value.
         
     Returns:
-        Tuple[torch.Tensor, torch.Tensor]: the audios samples and labels.
+        Tuple[torch.Tensor, torch.Tensor]: the audios samples, labels
     """
     data = []
     labels = []
-    max_frames = 0 if max_frames is None else max_frames
     
     for label, file_path in zip(df["label"], df["file"]):
         # reading the audio
@@ -162,25 +207,18 @@ def processing(
         audio = normalize(audio)
 
         assert audio.max().round().item() <= 1.0 and audio.min().round().item() >= -1.0
-        
-        if audio.shape[1] > max_frames:
-            max_frames = audio.shape[1]
-        
+
         data.append(audio)
         labels.append(label)
     
     # padding the audio's data
     data = pad_data(
         features=data,
-        max_frames=max_frames
+        max_frames=max_samples
     )
     
     data = torch.cat(data, 0).to(dtype=torch.float32)
     data = data.unsqueeze(1)
     labels = torch.as_tensor(labels, dtype=torch.long)
-    
-    # applying one hot encoding to the labels
-    if apply_one_hot_encoder:
-        labels = one_hot_encoder(labels)
         
     return data, labels

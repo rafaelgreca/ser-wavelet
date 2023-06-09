@@ -94,6 +94,7 @@ def prepare_propor_test_dataframe(
         pd.DataFrame: the formatted test dataset.
     """
     df = pd.read_csv(os.path.join(path, "test_ser_metadata.csv"), sep=",")
+    df.columns = ["wav_file", "label", "file"]
     df["file"] = df["file"].apply(lambda x: os.path.join(path, "test_ser", x))    
     return df.reset_index(drop=True)
 
@@ -136,18 +137,19 @@ def create_propor_train_dataframe(
     
     return df.reset_index(drop=True)
 
-def read_csv(
+def save(
     path: str,
-    separator: str
-) -> pd.DataFrame:
+    name: str,
+    tensor: torch.Tensor
+) -> None:
     """
-    Reads a CSV file and returns a pandas DataFrame.
+    Saves a PyTorch tensor.
     
     Args:
-        path (str): the path to the CSV file.
-        separator (str): the csv string separator.
-    
-    Returns:
-        df (pd.DataFrame): the pandas DataFrame.
+        path (str): The output path.
+        name (str): The file name.
+        tensor (torch.Tensor): The tensor which will be saved.
     """
-    return pd.read_csv(path, sep=separator)
+    os.makedirs(path, exist_ok=True)
+    path = os.path.join(path, f"{name}.pth")
+    torch.save(tensor, path)
