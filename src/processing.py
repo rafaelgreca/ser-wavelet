@@ -3,10 +3,26 @@ import torchaudio
 import torch.nn.functional as F
 import pandas as pd
 import os
-from src.utils import save
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from typing import Tuple, List, Union
+from typing import Tuple, List
 
+def save(
+    path: str,
+    name: str,
+    tensor: torch.Tensor
+) -> None:
+    """
+    Saves a PyTorch tensor.
+    
+    Args:
+        path (str): The output path.
+        name (str): The file name.
+        tensor (torch.Tensor): The tensor which will be saved.
+    """
+    os.makedirs(path, exist_ok=True)
+    path = os.path.join(path, f"{name}.pth")
+    torch.save(tensor, path)
+    
 def split_data(
     X: torch.Tensor,
     y: torch.Tensor,
