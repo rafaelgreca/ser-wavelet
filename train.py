@@ -4,6 +4,7 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
+import pandas as pd
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files
 from src.models.cnn import CNN
@@ -128,29 +129,33 @@ def training_pipeline(
     validation_data: List,
     feature_config: Dict,
     wavelet_config: Dict,
-    model_name: str,
-    output_dir: str,
-    epochs: int
-):
+    model_config: Dict,
+    dataset: str
+) -> None:
     total_folds = len(training_data)
+    
+    # creating log folder
+    log_path = os.path.join(os.getcwd(), "logs", dataset)
+    os.makedirs(log_path, exist_ok=True)
+    logs = pd.DataFrame()
     
     for fold, (training, validation) in enumerate(zip(training_data, validation_data)):
         X_train, y_train = training
         X_valid, y_valid = validation
         
         # creating and defining the model
-        model = CNN()
+        device = torch.device("cuda" if torch.cuda.is_available and model_config["use_gpu"] else "cpu")
+        model = CNN().to(device)
         optimizer = torch.optim.Adam(
             params=model.parameters(),
             lr=0.001
         )
         loss = torch.nn.CrossEntropyLoss()
-        device = torch.device("cuda" if torch.cuda.is_available else "cpu")
-        
+                
         # creating the model checkpoint object
         sbm = SaveBestModel(
-            output_dir=output_dir,
-            model_name=model_name
+            output_dir=os.path.join(model_config["output_path"], dataset, model_config["name"]),
+            model_name=model_config["name"]
         )
         
         # creating the training dataloader
@@ -162,7 +167,7 @@ def training_pipeline(
             num_workers=0,
             shuffle=True,
             training=True,
-            batch_size=32
+            batch_size=model_config["batch_size"]
         )
         
         # creating the validation dataloader
@@ -174,7 +179,7 @@ def training_pipeline(
             num_workers=0,
             shuffle=True,
             training=False,
-            batch_size=32
+            batch_size=model_config["batch_size"]
         )
         
         if total_folds != 1:
@@ -187,8 +192,8 @@ def training_pipeline(
             print("#" * 20); print()
             
         # training loop
-        for epoch in range(1, epochs+1):
-            print(f"Epoch: {epoch}/{epochs}")
+        for epoch in range(1, model_config["epochs"] + 1):
+            print(f"Epoch: {epoch}/{model_config['epochs']}")
             
             train_f1, train_loss = train(
                 device=device,
@@ -214,6 +219,32 @@ def training_pipeline(
                 model=model,
                 optimizer=optimizer
             )
+            
+            row = pd.DataFrame({
+                "epoch": [epoch],
+                "train_f1": [train_f1],
+                "train_loss": [train_loss],
+                "validation_f1": [valid_f1],
+                "validation_loss": [valid_loss]
+            })
+            
+            logs = pd.concat([
+                logs, row
+            ], axis=0)
+        
+        # printing the best result
+        print(); print("*" * 40);
+        print(f"Epoch: {sbm.best_epoch}")
+        print(f"Best F1-Score: {sbm.best_valid_f1}")
+        print(f"Best Loss: {sbm.best_valid_loss}")
+        print("*" * 40); print();
+        
+        logs = logs.reset_index(drop=True)
+        logs.to_csv(
+            path_or_buf=os.path.join(log_path, f"fold{fold if total_folds != 1 else ''}.csv"),
+            sep=",",
+            index=False
+        )
 
 if __name__ == "__main__":
     # reading the parameters configuration file
@@ -223,29 +254,29 @@ if __name__ == "__main__":
     k_fold = None
     max_seconds = 15
     
-    if "kfold" in params["feature"].keys():
-        k_fold = params["feature"]["kfold"]["num_k"]
+    if "kfold" in params.keys():
+        k_fold = params["kfold"]["num_k"]
     
-    max_samples = max_seconds * int(params["feature"]["sample_rate"])
+    max_samples = max_seconds * int(params["sample_rate"])
     
-    feat_config = params["feature"]["config"]
-    feat_config["sample_rate"] = int(params["feature"]["sample_rate"])
+    feat_config = params["feature"]
+    feat_config["sample_rate"] = int(params["sample_rate"])
     
-    wavelet_config = params["feature"]["wavelet"]
-    feat_path = os.path.join(params["feature"]["output_path"], params["feature"]["dataset"])
+    wavelet_config = params["wavelet"]
+    feat_path = os.path.join(params["output_path"], params["dataset"])
     
     # feature extraction pipeline
-    if params["feature"]["overwrite"] or not os.path.exists(params["feature"]["output_path"]):
+    if params["overwrite"] or not os.path.exists(params["output_path"]):
         print(); print("EXTRACTING THE FEATURES..."); print();
                 
         feature_extraction_pipeline(
-            sample_rate=int(params["feature"]["sample_rate"]),
-            to_mono=params["feature"]["to_mono"],
-            dataset=params["feature"]["dataset"],
+            sample_rate=int(params["sample_rate"]),
+            to_mono=params["to_mono"],
+            dataset=params["dataset"],
             max_samples=max_samples,
             k_fold=k_fold,
-            output_path=params["feature"]["output_path"],
-            input_path=params["feature"]["input_path"]
+            output_path=params["output_path"],
+            input_path=params["input_path"]
         )
     
     # reading the previously extracted features
@@ -254,7 +285,9 @@ if __name__ == "__main__":
         feat_path=feat_path
     )
     
-    model_output_dir = os.path.join("./checkpoints", "cnn")
+    model_config = params["model"]
+    
+    print(); print("TRAINING THE MODEL...");
     
     # training step
     training_pipeline(
@@ -262,7 +295,6 @@ if __name__ == "__main__":
         validation_data=validation_data,
         feature_config=feat_config,
         wavelet_config=wavelet_config,
-        epochs=50,
-        model_name="cnn",
-        output_dir=model_output_dir
+        model_config=model_config,
+        dataset=params["dataset"]
     )

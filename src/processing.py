@@ -3,8 +3,25 @@ import torchaudio
 import torch.nn.functional as F
 import pandas as pd
 import os
+from torch.nn.functional import one_hot
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from typing import Tuple, List
+
+def one_hot_encoder(
+    labels: torch.Tensor,
+    num_classes: int = -1
+) -> torch.Tensor:
+    """
+    Encode the labels into the one hot format.
+
+    Args:
+        labels (torch.Tensor): the data labels.
+        num_classes (int): the number of classes present in the data.
+
+    Returns:
+        torch.Tensor: the data labels one hot encoded.
+    """
+    return one_hot(labels, num_classes=num_classes)
 
 def save(
     path: str,
@@ -28,7 +45,8 @@ def split_data(
     y: torch.Tensor,
     dataset: str,
     output_path: str,
-    k_fold: int = 0
+    k_fold: int = 0,
+    apply_one_hot_encoder: bool = True
 ) -> None:
     skf = None
     
@@ -44,6 +62,11 @@ def split_data(
             
             X_valid = X[test_index, :, :]
             y_valid = y[test_index]
+            
+            if apply_one_hot_encoder:
+                num_classes = 3
+                y_train = one_hot_encoder(labels=y_train, num_classes=num_classes)
+                y_valid = one_hot_encoder(labels=y_valid, num_classes=num_classes)
             
             folder_path = os.path.join(output_path, dataset, f"fold{i}")
             

@@ -27,7 +27,7 @@ class Dataset(Dataset):
     ) -> Dict:
         batch = {}
         
-        if self.feature_config["feature"] == "melspectrogram":
+        if self.feature_config["name"] == "melspectrogram":
             feat = extract_melspectrogram(
                 audio=self.X[index, :, :].squeeze(0),
                 sample_rate=self.feature_config["sample_rate"],
@@ -35,7 +35,7 @@ class Dataset(Dataset):
                 hop_length=self.feature_config["hop_length"],
                 n_mels=self.feature_config["n_mels"]
             )
-        elif self.feature_config["feature"] == "mfcc":
+        elif self.feature_config["name"] == "mfcc":
             feat = extract_mfcc(
                 audio=self.X[index, :, :].squeeze(0),
                 sample_rate=self.feature_config["sample_rate"],

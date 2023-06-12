@@ -6,7 +6,7 @@ class CNN(nn.Module):
     def __init__(self) -> None:
         super().__init__()        
         self.input_channels = 1
-        self.linear_input_features = 243712
+        self.linear_input_features = 276480
             
         self.model = nn.Sequential(
             nn.Conv2d(

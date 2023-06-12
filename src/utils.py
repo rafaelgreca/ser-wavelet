@@ -2,7 +2,6 @@ import pandas as pd
 import os
 import torch
 from src.processing import split_data, processing
-from torch.nn.functional import one_hot
 from typing import Optional, Union, Tuple, List
 
 def labels_mapping(
@@ -37,22 +36,6 @@ def labels_mapping(
         })
     
     return df
-
-def one_hot_encoder(
-    labels: torch.Tensor,
-    num_classes: int = -1
-) -> torch.Tensor:
-    """
-    Encode the labels into the one hot format.
-
-    Args:
-        labels (torch.Tensor): the data labels.
-        num_classes (int): the number of classes present in the data.
-
-    Returns:
-        torch.Tensor: the data labels one hot encoded.
-    """
-    return one_hot(labels, num_classes=num_classes)
 
 def read_feature(
     path: str,
