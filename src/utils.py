@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import torch
 from torch.nn.functional import one_hot
-from typing import Union
+from typing import Optional, Union
 
 def labels_mapping(
     df: pd.DataFrame,
@@ -156,8 +156,8 @@ def save(
     
 def read_feature(
     path: str,
-    fold: Union[int, None],
-    name: str
+    name: str,
+    fold: Optional[int] = None
 ) -> torch.Tensor:
     """
     Reads the saved feature.

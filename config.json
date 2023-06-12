@@ -1,0 +1,28 @@
+{
+    "feature": {
+        "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
+        "output_path": "./features",
+        "sample_rate": 16000,
+        "dataset": "propor2022",
+        "wavelet": {
+            "type": "dwt",
+            "name": "db4",
+            "level": 4,
+            "mode": "symmetric"
+        },
+        "config": {
+            "feature": "mfcc",
+            "n_fft": 1024,
+            "hop_length": 512,
+            "n_mfcc": 128
+        },
+        "hop_length": 512,
+        "n_fft": 1024,
+        "n_mels": 128,
+        "kfold": {
+            "num_k": 5
+        },
+        "overwrite": false,
+        "to_mono": true
+    }
+}

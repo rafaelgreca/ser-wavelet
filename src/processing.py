@@ -16,7 +16,7 @@ def split_data(
 ) -> None:
     skf = None
     
-    if k_fold > 0:
+    if not k_fold is None:
         skf = StratifiedKFold(
             n_splits=k_fold,
             shuffle=True
