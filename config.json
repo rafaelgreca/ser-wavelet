@@ -10,10 +10,20 @@
         "mode": "symmetric"
     },
     "feature": {
-        "name": "mfcc",
+        "name": "melspectrogram",
         "n_fft": 1024,
         "hop_length": 512,
-        "n_mfcc": 128
+        "n_mels": 128
+    },
+    "data_augmentation": {
+        "mode": "raw_audio",
+        "target": "minority",
+        "p": 0.4,
+        "techniques": {
+            "audioaugment": {
+                "transformations": ["pitch_shift", "time_strech", "time_mask"]
+            }
+        }
     },
     "model": {
         "name": "cnn",

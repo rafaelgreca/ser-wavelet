@@ -129,10 +129,23 @@ def training_pipeline(
     validation_data: List,
     feature_config: Dict,
     wavelet_config: Dict,
+    data_augmentation_config: Dict,
     model_config: Dict,
     dataset: str
 ) -> None:
     total_folds = len(training_data)
+        
+    if dataset == "propor2022":
+        if data_augmentation_config["target"] == "majority":
+            data_augment_target = [0]
+        elif data_augmentation_config["target"] == "minority":
+            data_augment_target = [1, 2]
+        elif data_augmentation_config["target"] == "all":
+            data_augment_target = [0, 1, 2]
+        else:
+            raise ValueError("Invalid arguments for target. Should be 'all', 'majority' or 'minority")
+    else:
+        raise NotImplementedError
     
     # creating log folder
     log_path = os.path.join(os.getcwd(), "logs", dataset)
@@ -164,10 +177,12 @@ def training_pipeline(
             y=y_train,
             feature_config=feature_config,
             wavelet_config=wavelet_config,
+            data_augmentation_config=data_augmentation_config,
             num_workers=0,
             shuffle=True,
             training=True,
-            batch_size=model_config["batch_size"]
+            batch_size=model_config["batch_size"],
+            data_augment_target=data_augment_target
         )
         
         # creating the validation dataloader
@@ -176,10 +191,12 @@ def training_pipeline(
             y=y_valid,
             feature_config=feature_config,
             wavelet_config=wavelet_config,
+            data_augmentation_config=data_augmentation_config,
             num_workers=0,
             shuffle=True,
             training=False,
-            batch_size=model_config["batch_size"]
+            batch_size=model_config["batch_size"],
+            data_augment_target=data_augment_target
         )
         
         if total_folds != 1:
@@ -261,8 +278,9 @@ if __name__ == "__main__":
     
     feat_config = params["feature"]
     feat_config["sample_rate"] = int(params["sample_rate"])
-    
+    data_augmentation_config = params["data_augmentation"]
     wavelet_config = params["wavelet"]
+    
     feat_path = os.path.join(params["output_path"], params["dataset"])
     
     # feature extraction pipeline
@@ -295,6 +313,7 @@ if __name__ == "__main__":
         validation_data=validation_data,
         feature_config=feat_config,
         wavelet_config=wavelet_config,
+        data_augmentation_config=data_augmentation_config,
         model_config=model_config,
         dataset=params["dataset"]
     )

@@ -1,8 +1,32 @@
 import pandas as pd
 import os
 import torch
+import numpy as np
+import math
 from src.processing import split_data, processing
 from typing import Optional, Union, Tuple, List
+
+def convert_frequency_to_mel(
+    f: float
+) -> float:
+    """
+    Extracted from: https://github.com/iver56/audiomentations/blob/24748c64d85499aefce5e21ce91d59cf1d658374/audiomentations/core/utils.py
+
+    Convert f hertz to mels
+    https://en.wikipedia.org/wiki/Mel_scale#Formula
+    """
+    return 2595.0 * math.log10(1.0 + f / 700.0)
+
+def convert_mel_to_frequency(
+    m: Union[float, np.array]
+) -> Union[float, np.array]:
+    """
+    Extracted from: https://github.com/iver56/audiomentations/blob/24748c64d85499aefce5e21ce91d59cf1d658374/audiomentations/core/utils.py
+    
+    Convert m mels to hertz
+    https://en.wikipedia.org/wiki/Mel_scale#History_and_other_formulas
+    """
+    return 700.0 * (10 ** (m / 2595.0) - 1.0)
 
 def labels_mapping(
     df: pd.DataFrame,
