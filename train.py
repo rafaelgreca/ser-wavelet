@@ -11,8 +11,8 @@ from src.models.cnn import CNN
 from src.models.cnn_lstm import CNN_LSTM
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
-from sklearn.metrics import f1_score
 from typing import Dict, Tuple, List
+from sklearn.metrics import classification_report
 
 # making sure the experiments are reproducible
 seed = 2109
@@ -44,10 +44,11 @@ def train(
         Tuple[float, float]: the training f1 and loss, respectively.
     """
     model.train()
+    predictions = []
+    targets = []
     train_loss = 0.0
-    train_f1 = 0.0
     
-    for batch in dataloader:
+    for index, (batch) in enumerate(dataloader, start=1):
         data = batch["features"].to(device)
         target = batch["labels"].to(device)
         optimizer.zero_grad()
@@ -58,23 +59,28 @@ def train(
         output = model(data)
 
         l = loss(output, target)
-            
         train_loss += l.item()
         
         l.backward()
         optimizer.step()
         
-        prediction = output.argmax(dim=-1, keepdim=False).to(dtype=torch.int)
-        target = target.argmax(dim=-1, keepdim=False).to(dtype=torch.int)
+        prediction = output.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+        prediction = prediction.detach().cpu().numpy()
+        predictions.extend(prediction.tolist())
         
-        train_f1 += f1_score(
-            target.detach().cpu().numpy(),
-            prediction.detach().cpu().numpy(),
-            average="macro"
-        )
-    
-    train_loss /= len(dataloader)
-    train_f1 /= len(dataloader)
+        target = target.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+        target = target.detach().cpu().numpy()
+        targets.extend(target.tolist())
+        
+    train_loss = train_loss/index
+    train_f1 = classification_report(
+        targets,
+        predictions,
+        digits=6,
+        output_dict=True,
+        zero_division=0.0
+    )
+    train_f1 = train_f1["macro avg"]["f1-score"]
     return train_f1, train_loss
 
 def evaluate(
@@ -96,11 +102,13 @@ def evaluate(
         Tuple[float, float]: the validation f1 and loss, respectively.
     """
     model.eval()
+    predictions = []
+    targets = []
     validation_loss = 0.0
-    validation_f1 = 0.0
+    validation_f1 = []
     
     with torch.inference_mode():
-        for batch in dataloader:
+        for index, (batch) in enumerate(dataloader):
             data = batch["features"].to(device)
             target = batch["labels"].to(device)
 
@@ -112,17 +120,23 @@ def evaluate(
             l = loss(output, target)
             validation_loss += l.item()
             
-            prediction = output.argmax(dim=-1, keepdim=False).to(dtype=torch.int)
-            target = target.argmax(dim=-1, keepdim=False).to(dtype=torch.int)
+            prediction = output.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+            prediction = prediction.detach().cpu().numpy()
+            predictions.extend(prediction.tolist())
             
-            validation_f1 += f1_score(
-                target.detach().cpu().numpy(),
-                prediction.detach().cpu().numpy(),
-                average="macro"
-            )
+            target = target.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+            target = target.detach().cpu().numpy()
+            targets.extend(target.tolist())
     
-    validation_loss /= len(dataloader)
-    validation_f1 /= len(dataloader)
+    validation_loss = validation_loss/index
+    validation_f1 = classification_report(
+        targets,
+        predictions,
+        digits=6,
+        output_dict=True,
+        zero_division=0.0
+    )
+    validation_f1 = validation_f1["macro avg"]["f1-score"]
     return validation_f1, validation_loss
 
 def training_pipeline(

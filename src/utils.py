@@ -3,8 +3,25 @@ import os
 import torch
 import numpy as np
 import math
+from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from typing import Optional, Union, Tuple, List
+
+def one_hot_encoder(
+    labels: torch.Tensor,
+    num_classes: int = -1
+) -> torch.Tensor:
+    """
+    Encode the labels into the one hot format.
+
+    Args:
+        labels (torch.Tensor): the data labels.
+        num_classes (int): the number of classes present in the data.
+
+    Returns:
+        torch.Tensor: the data labels one hot encoded.
+    """
+    return one_hot(labels, num_classes=num_classes)
 
 def convert_frequency_to_mel(
     f: float
@@ -196,7 +213,8 @@ def feature_extraction_pipeline(
     max_samples: int,
     k_fold: int,
     output_path: str,
-    input_path: str
+    input_path: str,
+    apply_one_hot_encoder: bool = True
 ) -> None:
     # reading the training dataset
     train_df = create_propor_train_dataframe(
@@ -221,7 +239,8 @@ def feature_extraction_pipeline(
         y=y_train,
         dataset=dataset,
         output_path=output_path,
-        k_fold=k_fold
+        k_fold=k_fold,
+        apply_one_hot_encoder=apply_one_hot_encoder
     )
     
     # reading the test dataset
@@ -241,6 +260,10 @@ def feature_extraction_pipeline(
         max_samples=max_samples
     )
     
+    if apply_one_hot_encoder:
+        num_classes = 3
+        y_test = one_hot_encoder(labels=y_test, num_classes=num_classes)
+        
     # saving the test features
     folder_path = os.path.join(output_path, dataset)
         

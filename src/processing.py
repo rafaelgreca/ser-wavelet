@@ -84,6 +84,11 @@ def split_data(
             stratify=y,
             shuffle=True
         )
+        
+        if apply_one_hot_encoder:
+            num_classes = 3
+            y_train = one_hot_encoder(labels=y_train, num_classes=num_classes)
+            y_valid = one_hot_encoder(labels=y_valid, num_classes=num_classes)
             
         folder_path = os.path.join(output_path, dataset)
         
@@ -172,7 +177,7 @@ def read_audio(
     Returns:
         Tuple[torch.Tensor, int]: the audio waveform and the sample rate.
     """
-    audio, sr = torchaudio.load(filepath=path, normalize=False)
+    audio, sr = torchaudio.load(filepath=path)
     
     # resampling the audio to that specific sample rate (if necessary)
     if sample_rate != sr:
@@ -243,7 +248,7 @@ def processing(
         assert sr == sample_rate
         
         # normalizing the audio's samples
-        audio = normalize(audio)
+        # audio = normalize(audio)
 
         assert audio.max().round().item() <= 1.0 and audio.min().round().item() >= -1.0
 

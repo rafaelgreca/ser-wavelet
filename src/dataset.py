@@ -2,7 +2,7 @@ import torch
 from src.data_augmentation import AudioAugment, SpecAugment, Denoiser
 from src.features import extract_melspectrogram, extract_mfcc, extract_wavelet_from_spectrogram
 from torch.utils.data import Dataset, DataLoader
-from typing import Dict
+from typing import Dict, Union
 
 class Dataset(Dataset):
     def __init__(
@@ -11,9 +11,9 @@ class Dataset(Dataset):
         y: torch.Tensor,
         feature_config: Dict,
         wavelet_config: Dict,
-        data_augmentation_config: Dict,
+        data_augmentation_config: Union[Dict, None],
         training: bool,
-        data_augment_target: str
+        data_augment_target: Union[str, None]
     ) -> None:
         self.X = X
         self.y = y
@@ -77,9 +77,10 @@ class Dataset(Dataset):
     ) -> Dict:
         batch = {}
         
-        if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-            self.data_augmentation_config["mode"] == "raw_audio":
-            self._apply_augmentation_raw_audio(self.X[index, :, :])
+        if self.data_augment_target is not None:
+            if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
+                self.data_augmentation_config["mode"] == "raw_audio":
+                self._apply_augmentation_raw_audio(self.X[index, :, :])
         
         assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
         
@@ -102,9 +103,10 @@ class Dataset(Dataset):
         
         assert feat.ndim == 3 and feat.shape[0] == 1
         
-        if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-            self.data_augmentation_config["mode"] == "feature":
-            self._apply_augmentation_feature(feat)
+        if self.data_augment_target is not None:
+            if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
+                self.data_augmentation_config["mode"] == "feature":
+                self._apply_augmentation_feature(feat)
         
         assert feat.ndim == 3 and feat.shape[0] == 1
         
@@ -128,8 +130,8 @@ def create_dataloader(
     batch_size: int,
     feature_config: Dict,
     wavelet_config: Dict,
-    data_augmentation_config: Dict,
-    data_augment_target: str,
+    data_augmentation_config: Union[Dict, None],
+    data_augment_target: Union[str, None],
     num_workers: int = 0,
     shuffle: bool = True,
     training: bool = True
@@ -151,7 +153,7 @@ def create_dataloader(
         batch_size=batch_size,
         num_workers=num_workers,
         shuffle=shuffle,
-        drop_last=True
+        drop_last=False
     )
     
     return dataloader

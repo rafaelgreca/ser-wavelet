@@ -1,7 +1,7 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
     "output_path": "./features",
-    "sample_rate": 16000,
+    "sample_rate": 8000,
     "dataset": "propor2022",
     "wavelet": {
         "type": "dwt",
@@ -10,10 +10,10 @@
         "mode": "symmetric"
     },
     "feature": {
-        "name": "melspectrogram",
+        "name": "mfcc",
         "n_fft": 1024,
-        "hop_length": 512,
-        "n_mels": 128
+        "hop_length": 256,
+        "n_mfcc": 128
     },
     "data_augmentation": {
         "mode": "raw_audio",
@@ -21,7 +21,7 @@
         "p": 0.5,
         "techniques": {
             "audioaugment": {
-                "transformations": ["pitch_shift", "time_mask"]
+                "transformations": ["pitch_shift", "time_mask", "tanh_distortion"]
             }
         }
     },
