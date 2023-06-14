@@ -8,6 +8,7 @@ import pandas as pd
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files
 from src.models.cnn import CNN
+from src.models.cnn_lstm import CNN_LSTM
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from sklearn.metrics import f1_score
@@ -158,7 +159,14 @@ def training_pipeline(
         
         # creating and defining the model
         device = torch.device("cuda" if torch.cuda.is_available and model_config["use_gpu"] else "cpu")
-        model = CNN().to(device)
+        
+        if model_config["name"] == "cnn":
+            model = CNN().to(device)
+        elif model_config["name"] == "cnn_lstm":
+            model = CNN_LSTM().to(device)
+        else:
+            raise NotImplementedError
+        
         optimizer = torch.optim.Adam(
             params=model.parameters(),
             lr=0.001

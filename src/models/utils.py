@@ -6,7 +6,7 @@ from typing import Union
 
 # All credits to: https://discuss.pytorch.org/t/same-implementation-different-results-between-keras-and-pytorch-lstm/39146
 def weight_init(
-    m: nn.Module
+    m: torch.nn.Module
 ):
     """
     Initalize all the weights in the PyTorch model to be the same as Keras.
@@ -14,6 +14,11 @@ def weight_init(
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         nn.init.xavier_uniform_(m.weight)
         nn.init.zeros_(m.bias)
+    if isinstance(m, nn.LSTM):
+        nn.init.xavier_uniform_(m.weight_ih_l0)
+        nn.init.orthogonal_(m.weight_hh_l0)
+        nn.init.zeros_(m.bias_ih_l0)
+        nn.init.zeros_(m.bias_hh_l0)
         
 class SaveBestModel:
     """
