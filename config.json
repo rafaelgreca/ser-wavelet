@@ -17,17 +17,17 @@
     },
     "data_augmentation": {
         "mode": "raw_audio",
-        "target": "minority",
-        "p": 0.4,
+        "target": "all",
+        "p": 0.5,
         "techniques": {
             "audioaugment": {
-                "transformations": ["pitch_shift", "time_strech", "time_mask"]
+                "transformations": ["pitch_shift", "time_mask"]
             }
         }
     },
     "model": {
-        "name": "cnn_lstm",
-        "use_gpu": false,
+        "name": "cnn",
+        "use_gpu": true,
         "output_path": "./checkpoints",
         "batch_size": 32,
         "learning_rate": 0.001,

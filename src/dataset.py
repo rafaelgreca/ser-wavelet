@@ -58,7 +58,6 @@ class Dataset(Dataset):
     ) -> torch.Tensor:
         transformations = self.data_augmentation_config["techniques"]
         p = self.data_augmentation_config["p"]
-        sample_rate = self.feature_config["sample_rate"]
         
         for transformation in transformations.keys():
             if transformation == "specaugment":
@@ -82,9 +81,11 @@ class Dataset(Dataset):
             self.data_augmentation_config["mode"] == "raw_audio":
             self._apply_augmentation_raw_audio(self.X[index, :, :])
         
+        assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
+        
         if self.feature_config["name"] == "melspectrogram":
             feat = extract_melspectrogram(
-                audio=self.X[index, :, :].squeeze(0),
+                audio=self.X[index, :, :],
                 sample_rate=self.feature_config["sample_rate"],
                 n_fft=self.feature_config["n_fft"],
                 hop_length=self.feature_config["hop_length"],
@@ -92,25 +93,31 @@ class Dataset(Dataset):
             )
         elif self.feature_config["name"] == "mfcc":
             feat = extract_mfcc(
-                audio=self.X[index, :, :].squeeze(0),
+                audio=self.X[index, :, :],
                 sample_rate=self.feature_config["sample_rate"],
                 n_fft=self.feature_config["n_fft"],
                 hop_length=self.feature_config["hop_length"],
                 n_mfcc=self.feature_config["n_mfcc"]
             )
         
+        assert feat.ndim == 3 and feat.shape[0] == 1
+        
         if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
             self.data_augmentation_config["mode"] == "feature":
             self._apply_augmentation_feature(feat)
         
+        assert feat.ndim == 3 and feat.shape[0] == 1
+        
         X, _ = extract_wavelet_from_spectrogram(
-            spectrogram=feat,
+            spectrogram=feat.squeeze(0),
             wavelet=self.wavelet_config["name"],
             maxlevel=self.wavelet_config["level"],
             type=self.wavelet_config["type"],
             mode=self.wavelet_config["mode"]
         )
-                
+        
+        assert X.ndim == 2
+        
         batch["features"] = X.unsqueeze(0)
         batch["labels"] = self.y[index]
         return batch
