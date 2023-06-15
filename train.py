@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import pandas as pd
+import argparse
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files, choose_model
 from src.models.utils import SaveBestModel
@@ -295,8 +296,14 @@ def training_pipeline(
         )
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", required=True, help="the configuration json file path.")
+    args = parser.parse_args()
+    
+    assert os.path.exists(args.config), "Configuration file does not exist!"
+    
     # reading the parameters configuration file
-    params = json.load(open("./config.json", "r"))
+    params = json.load(open(args.config, "r"))
     
     # parameters defination
     k_fold = None
@@ -307,7 +314,11 @@ if __name__ == "__main__":
     
     max_samples = max_seconds * int(params["sample_rate"])
     
-    feat_config = params["feature"]
+    if params["mode"] != "mode_3":
+        feat_config = params["feature"]
+    else:
+        feat_config = {}
+        
     feat_config["sample_rate"] = int(params["sample_rate"])
     data_augmentation_config = params["data_augmentation"]
     wavelet_config = params["wavelet"]

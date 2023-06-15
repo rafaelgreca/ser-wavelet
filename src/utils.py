@@ -9,6 +9,7 @@ from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.cnn import CNN_Mode1, CNN_Mode2
 from src.models.cnn_lstm import CNN_LSTM
+from src.models.mlp import MLP
 from typing import Optional, Union, Tuple, List
 
 def pad_features(
@@ -64,17 +65,11 @@ def choose_model(
             raise ValueError(f"The model {model_name} is not supported for the mode {mode}.")
         elif model_name == "cnn":
             model = CNN_Mode2().to(device)
-    #     elif model_name == "resnet18":
-    #         model = resnet18().to(device)
-    #     elif model_name == "resnet30":
-    #         model = resnet30().to(device)
-    #     elif model_name == "resnet50":
-    #         model = resnet50().to(device)
-    # elif mode == "mode_3":
-    #     if model_name != "mlp":
-    #         raise ValueError(f"The only supported model for the {mode} is mlp.")
-    #     else:
-    #         model = MLP().to(device)
+    elif mode == "mode_3":
+        if model_name != "mlp":
+            raise ValueError(f"The only supported model for the {mode} is mlp.")
+        else:
+            model = MLP().to(device)
     
     return model
 

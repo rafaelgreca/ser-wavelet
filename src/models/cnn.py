@@ -46,7 +46,7 @@ class CNN_Mode2(nn.Module):
         ) 
         
         self.output_layer = nn.Linear(
-            in_features=268800,
+            in_features=555520,
             out_features=3
         )
         
@@ -71,7 +71,7 @@ class CNN_Mode1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.input_channels = 1
-        self.linear_input_features = 30720
+        self.linear_input_features = 61440
             
         self.model = nn.Sequential(
             nn.Conv2d(

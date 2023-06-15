@@ -3,6 +3,7 @@
     "output_path": "./features",
     "sample_rate": 8000,
     "dataset": "propor2022",
+    "mode": "mode_1",
     "wavelet": {
         "type": "dwt",
         "name": "db4",
@@ -12,7 +13,7 @@
     "feature": {
         "name": "mfcc",
         "n_fft": 1024,
-        "hop_length": 256,
+        "hop_length": 512,
         "n_mfcc": 128
     },
     "data_augmentation": {
@@ -21,7 +22,7 @@
         "p": 0.5,
         "techniques": {
             "audioaugment": {
-                "transformations": ["pitch_shift", "time_mask", "tanh_distortion"]
+                "transformations": ["pitch_shift", "time_mask"]
             }
         }
     },
