@@ -31,7 +31,8 @@
         "output_path": "./checkpoints",
         "batch_size": 32,
         "learning_rate": 0.001,
-        "epochs": 50
+        "epochs": 50,
+        "use_lr_scheduler": true
     },
     "kfold": {
         "num_k": 5

@@ -11,6 +11,7 @@ from src.models.cnn import CNN
 from src.models.cnn_lstm import CNN_LSTM
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import StepLR
 from typing import Dict, Tuple, List
 from sklearn.metrics import classification_report
 
@@ -166,7 +167,7 @@ def training_pipeline(
     log_path = os.path.join(os.getcwd(), "logs", dataset)
     os.makedirs(log_path, exist_ok=True)
     logs = pd.DataFrame()
-    
+        
     for fold, (training, validation) in enumerate(zip(training_data, validation_data)):
         X_train, y_train = training
         X_valid, y_valid = validation
@@ -186,6 +187,10 @@ def training_pipeline(
             lr=0.001
         )
         loss = torch.nn.CrossEntropyLoss()
+        scheduler = None
+    
+        if model["use_lr_scheduler"]:
+            scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
                 
         # creating the model checkpoint object
         sbm = SaveBestModel(
@@ -258,6 +263,10 @@ def training_pipeline(
                 model=model,
                 optimizer=optimizer
             )
+            
+            # updating learning rate
+            if not scheduler is None:
+                scheduler.step()
             
             row = pd.DataFrame({
                 "epoch": [epoch],
