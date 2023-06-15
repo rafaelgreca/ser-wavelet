@@ -1,11 +1,82 @@
 import pandas as pd
 import os
 import torch
+import torch.nn.functional as F
 import numpy as np
 import math
+import torch.nn as nn 
 from torch.nn.functional import one_hot
 from src.processing import split_data, processing
+from src.models.cnn import CNN_Mode1, CNN_Mode2
+from src.models.cnn_lstm import CNN_LSTM
 from typing import Optional, Union, Tuple, List
+
+def pad_features(
+    features: List,
+    max_height: int,
+    max_width: int
+) -> torch.Tensor:
+    """
+    Auxiliary function to pad the features.
+    
+    Args:
+        features (List): the features that will be padded (mfcc, spectogram or mel_spectogram).
+        max_height (int): the height max value.
+        max_width (int): the width max value.
+    
+    Returns:
+        List: the padded features.
+    """
+    features = [
+        F.pad(f, (0, max_width - f.size(2), 0, max_height - f.size(1)))
+        for f in features
+    ]
+    return features
+
+def choose_model(
+    mode: str,
+    model_name: str,
+    device: torch.device
+) -> nn.Module:
+    """
+    Creates the model based on the given model_name and mode.
+
+    Args:
+        mode (str): which mode is running.
+        model_name (str): the model name.
+        device (torch.device): the device where the model will be ran.
+
+    Raises:
+        ValueError: if the chosen model is not supported in the given mode.
+
+    Returns:
+        nn.Module: the created model.
+    """
+    if mode == "mode_1":
+        if model_name == "mlp":
+            raise ValueError(f"The model {model_name} is not supported for the mode {mode}.")
+        elif model_name == "cnn":
+            model = CNN_Mode1().to(device)
+        elif model_name == "cnn_lstm":
+            model = CNN_LSTM().to(device)
+    elif mode == "mode_2":
+        if model_name == "mlp":
+            raise ValueError(f"The model {model_name} is not supported for the mode {mode}.")
+        elif model_name == "cnn":
+            model = CNN_Mode2().to(device)
+    #     elif model_name == "resnet18":
+    #         model = resnet18().to(device)
+    #     elif model_name == "resnet30":
+    #         model = resnet30().to(device)
+    #     elif model_name == "resnet50":
+    #         model = resnet50().to(device)
+    # elif mode == "mode_3":
+    #     if model_name != "mlp":
+    #         raise ValueError(f"The only supported model for the {mode} is mlp.")
+    #     else:
+    #         model = MLP().to(device)
+    
+    return model
 
 def one_hot_encoder(
     labels: torch.Tensor,

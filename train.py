@@ -6,9 +6,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 from src.dataset import create_dataloader
-from src.utils import feature_extraction_pipeline, read_features_files
-from src.models.cnn import CNN
-from src.models.cnn_lstm import CNN_LSTM
+from src.utils import feature_extraction_pipeline, read_features_files, choose_model
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
@@ -147,6 +145,7 @@ def training_pipeline(
     wavelet_config: Dict,
     data_augmentation_config: Dict,
     model_config: Dict,
+    mode: str,
     dataset: str
 ) -> None:
     total_folds = len(training_data)
@@ -175,12 +174,11 @@ def training_pipeline(
         # creating and defining the model
         device = torch.device("cuda" if torch.cuda.is_available and model_config["use_gpu"] else "cpu")
         
-        if model_config["name"] == "cnn":
-            model = CNN().to(device)
-        elif model_config["name"] == "cnn_lstm":
-            model = CNN_LSTM().to(device)
-        else:
-            raise NotImplementedError
+        model = choose_model(
+            mode=mode,
+            model_name=model_config["name"],
+            device=device
+        )
         
         optimizer = torch.optim.Adam(
             params=model.parameters(),
@@ -189,7 +187,7 @@ def training_pipeline(
         loss = torch.nn.CrossEntropyLoss()
         scheduler = None
     
-        if model["use_lr_scheduler"]:
+        if model_config["use_lr_scheduler"]:
             scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
                 
         # creating the model checkpoint object
@@ -206,6 +204,7 @@ def training_pipeline(
             wavelet_config=wavelet_config,
             data_augmentation_config=data_augmentation_config,
             num_workers=0,
+            mode=mode,
             shuffle=True,
             training=True,
             batch_size=model_config["batch_size"],
@@ -220,6 +219,7 @@ def training_pipeline(
             wavelet_config=wavelet_config,
             data_augmentation_config=data_augmentation_config,
             num_workers=0,
+            mode=mode,
             shuffle=True,
             training=False,
             batch_size=model_config["batch_size"],
@@ -346,5 +346,6 @@ if __name__ == "__main__":
         wavelet_config=wavelet_config,
         data_augmentation_config=data_augmentation_config,
         model_config=model_config,
+        mode=params["mode"],
         dataset=params["dataset"]
     )
