@@ -45,14 +45,14 @@ class Dataset_Mode3(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
+                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-            
-            audio = augment(audio)
+                audio = augment(audio)
         
         return audio
         
@@ -71,7 +71,7 @@ class Dataset_Mode3(Dataset):
                 
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "feature":
+                self.data_augmentation_config["mode"] in ["feature", "both"]:
                 raise ValueError()
                 
         coeffs = extract_wavelet_from_raw_audio(
@@ -139,14 +139,14 @@ class Dataset_Mode2(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
+                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-            
-            audio = augment(audio)
+                audio = augment(audio)
         
         return audio
     
@@ -164,8 +164,7 @@ class Dataset_Mode2(Dataset):
                     p=p,
                     mask_samples=transformations[transformation]["mask_samples"]
                 )
-            
-            audio = augment(audio)
+                audio = augment(audio)
         
         return audio
     
@@ -177,7 +176,7 @@ class Dataset_Mode2(Dataset):
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "raw_audio":
+                self.data_augmentation_config["mode"] in ["raw_audio", "both"]:
                 self._apply_augmentation_raw_audio(self.X[index, :, :])
         
         assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
@@ -218,7 +217,7 @@ class Dataset_Mode2(Dataset):
                                         
             if self.data_augment_target is not None:
                 if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                    self.data_augmentation_config["mode"] == "feature":
+                    self.data_augmentation_config["mode"] in ["feature", "both"]:
                     self._apply_augmentation_feature(feat)
         
             feat = feat.unsqueeze(0)
@@ -282,14 +281,14 @@ class Dataset_Mode1(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
+                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-            
-            audio = augment(audio)
+                audio = augment(audio)
         
         return audio
     
@@ -307,8 +306,7 @@ class Dataset_Mode1(Dataset):
                     p=p,
                     mask_samples=transformations[transformation]["mask_samples"]
                 )
-            
-            audio = augment(audio)
+                audio = augment(audio)
         
         return audio
     
@@ -320,7 +318,7 @@ class Dataset_Mode1(Dataset):
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "raw_audio":
+                self.data_augmentation_config["mode"] in ["raw_audio", "both"]:
                 self._apply_augmentation_raw_audio(self.X[index, :, :])
         
         assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
@@ -346,7 +344,7 @@ class Dataset_Mode1(Dataset):
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "feature":
+                self.data_augmentation_config["mode"] in ["feature", "both"]:
                 self._apply_augmentation_feature(feat)
         
         assert feat.ndim == 3 and feat.shape[0] == 1
