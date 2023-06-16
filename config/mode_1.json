@@ -13,7 +13,7 @@
     "feature": {
         "name": "mfcc",
         "n_fft": 1024,
-        "hop_length": 512,
+        "hop_length": 256,
         "n_mfcc": 128
     },
     "data_augmentation": {

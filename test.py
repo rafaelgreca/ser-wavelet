@@ -1,13 +1,12 @@
+import argparse
 import os
 import json
 import torch
 import torch.nn as nn
 from sklearn.metrics import classification_report
 from torch.utils.data import DataLoader
-from src.utils import read_feature
+from src.utils import read_feature, choose_model
 from src.dataset import create_dataloader
-from src.models.cnn import CNN
-from src.models.cnn_lstm import CNN_LSTM
 
 def test(
     model: nn.Module,
@@ -51,8 +50,14 @@ def test(
     return class_report
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", required=True, help="the json configuration file path.")
+    args = parser.parse_args()
+    
+    assert os.path.exists(args.config), "Configuration file does not exist!"
+    
     # reading the parameters configuration file
-    params = json.load(open("./config.json", "r"))
+    params = json.load(open(args.config, "r"))
     
     # parameters defination
     k_fold = None
@@ -61,7 +66,11 @@ if __name__ == "__main__":
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]
     
-    feat_config = params["feature"]
+    if params["mode"] != "mode_3":
+        feat_config = params["feature"]
+    else:
+        feat_config = {}
+        
     feat_config["sample_rate"] = int(params["sample_rate"])
     wavelet_config = params["wavelet"]
     
@@ -84,11 +93,11 @@ if __name__ == "__main__":
         output_path = params["model"]["output_path"]
         model_name = params["model"]["name"]
         
-        # instantiating the base model
-        if model_name == "cnn":
-            model = CNN().to(device)
-        elif model_name == "cnn_lstm":
-            model = CNN_LSTM().to(device)
+        model = choose_model(
+            mode=params["mode"],
+            model_name=model_name,
+            device=device
+        )
                 
         # creating the test dataloader
         test_dataloader = create_dataloader(
@@ -98,6 +107,7 @@ if __name__ == "__main__":
             wavelet_config=wavelet_config,
             data_augmentation_config=None,
             num_workers=0,
+            mode=params["mode"],
             shuffle=False,
             training=False,
             batch_size=params["model"]["batch_size"],
@@ -109,7 +119,7 @@ if __name__ == "__main__":
                 # loading the trained model parameters
                 model.load_state_dict(
                     torch.load(
-                        os.path.join(output_path, params["dataset"], model_name, f"{model_name}_fold{fold}.pth")
+                        os.path.join(output_path, params["dataset"], params["mode"], model_name, f"{model_name}_fold{fold}.pth")
                     )["model_state_dict"]
                 )
                 
@@ -129,7 +139,7 @@ if __name__ == "__main__":
             # loading the trained model parameters
             model.load_state_dict(
                 torch.load(
-                    os.path.join(output_path, params["feature"]["dataset"], params["feature"]["mode"], f"{model_name}.pth")
+                    os.path.join(output_path, params["feature"]["dataset"], params["mode"], model_name, f"{model_name}.pth")
                 )["model_state_dict"]
             )
             

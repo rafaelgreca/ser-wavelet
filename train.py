@@ -193,7 +193,7 @@ def training_pipeline(
                 
         # creating the model checkpoint object
         sbm = SaveBestModel(
-            output_dir=os.path.join(model_config["output_path"], dataset, model_config["name"]),
+            output_dir=os.path.join(model_config["output_path"], dataset, mode, model_config["name"]),
             model_name=model_config["name"]
         )
         
@@ -297,7 +297,7 @@ def training_pipeline(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", required=True, help="the configuration json file path.")
+    parser.add_argument("-c", "--config", required=True, help="the json configuration file path.")
     args = parser.parse_args()
     
     assert os.path.exists(args.config), "Configuration file does not exist!"
