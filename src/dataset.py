@@ -201,7 +201,7 @@ class Dataset_Mode2(Dataset):
         feats = []
         
         for coeff in new_coeffs:
-            if self.feature_config["name"] == "melspectrogram":
+            if self.feature_config["name"] == "mel_spectrogram":
                 feat = extract_melspectrogram(
                     audio=coeff,
                     sample_rate=self.feature_config["sample_rate"],
@@ -326,7 +326,7 @@ class Dataset_Mode1(Dataset):
         
         assert audio.ndim == 2 and audio.shape[0] == 1
                 
-        if self.feature_config["name"] == "melspectrogram":
+        if self.feature_config["name"] == "mel_spectrogram":
             feat = extract_melspectrogram(
                 audio=audio,
                 sample_rate=self.feature_config["sample_rate"],

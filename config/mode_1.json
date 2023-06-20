@@ -7,28 +7,29 @@
     "wavelet": {
         "type": "dwt",
         "name": "db4",
-        "level": 4,
+        "level": 3,
         "mode": "symmetric"
     },
     "feature": {
         "name": "mfcc",
-        "n_fft": 1024,
+        "n_fft": 512,
         "hop_length": 256,
-        "n_mfcc": 128
+        "n_mfcc": 64
     },
     "data_augmentation": {
-        "mode": "raw_audio",
+        "mode": "feature",
         "target": "all",
-        "p": 0.5,
+        "p": 1,
         "techniques": {
-            "audioaugment": {
-                "transformations": ["pitch_shift", "time_mask"]
+            "specaugment": {
+                "transformations": ["time_mask", "frequency_mask"],
+                "mask_samples": 10
             }
         }
     },
     "model": {
         "name": "cnn",
-        "use_gpu": true,
+        "use_gpu": false,
         "output_path": "./checkpoints",
         "batch_size": 32,
         "learning_rate": 0.001,

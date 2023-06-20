@@ -257,7 +257,7 @@ class SpecAugment:
         rand = torch.rand(1).item()
 
         if rand < self.p:
-            if self.feature == "mel_spectrogram":
+            if self.feature == "melspectrogram":
                 spec = self._augment_mel_spec(spec)
             elif self.feature == "mfcc":
                 spec = self._augment_mfcc(spec)
