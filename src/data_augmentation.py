@@ -24,7 +24,7 @@ class AudioAugment:
         """
         _valid_transformations = ["tanh_distortion", "pitch_shift", "time_strech", "time_mask", "trim"]
         
-        assert 0 < p <= 1.0
+        assert 0 <= p <= 1.0
         assert all([t in _valid_transformations for t in transformations])
         assert sample_rate > 0
         
@@ -102,7 +102,7 @@ class Denoiser:
         """
         _valid_filters = ["low_pass", "high_pass"]
         
-        assert 0 < p <= 1.0
+        assert 0 <= p <= 1.0
         assert all([f in _valid_filters for f in filters])
         
         self.p = p
@@ -219,7 +219,8 @@ class SpecAugment:
         self,
         p: float,
         transformations: list,
-        mask_samples: int
+        mask_samples: int,
+        feature: str
     ) -> None:
         """
         Args:
@@ -228,14 +229,17 @@ class SpecAugment:
             mask_samples (int): maximum possible length of the mask. Indices uniformly sampled from [0, mask_samples).
         """
         _valid_transformations = ["time_mask", "frequency_mask"]
+        _valid_features = ["mel_spectrogram", "mfcc"]
         
-        assert 0 < p <= 1.0
+        assert 0 <= p <= 1.0
         assert all([t in _valid_transformations for t in transformations])
         assert mask_samples > 0
+        assert feature in _valid_features
         
         self.p = p
         self.transformations = transformations
         self.mask_samples = mask_samples
+        self.feature = feature
     
     def __call__(
         self,
@@ -253,12 +257,75 @@ class SpecAugment:
         rand = torch.rand(1).item()
 
         if rand < self.p:
-            for transformation in self.transformations:
-                if transformation == "time_mask":
-                    masking = T.TimeMasking(time_mask_param=self.mask_samples)
-                elif transformation == "frequency_mask":
-                    masking = T.FrequencyMasking(freq_mask_param=self.mask_samples)
-                spec = masking(spec)
+            if self.feature == "mel_spectrogram":
+                spec = self._augment_mel_spec(spec)
+            elif self.feature == "mfcc":
+                spec = self._augment_mfcc(spec)
+        
+        return spec
+    
+    def _augment_mel_spec(
+        self,
+        spec: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Applies the data augmentation to the given mel spectrogram.
+
+        Args:
+            spec (torch.Tensor): the mel spectrogram.
+
+        Returns:
+            torch.Tensor: the augmented mel spectrogram.
+        """
+        for transformation in self.transformations:
+            if transformation == "time_mask":
+                masking = T.TimeMasking(time_mask_param=self.mask_samples)
+            elif transformation == "frequency_mask":
+                masking = T.FrequencyMasking(freq_mask_param=self.mask_samples)
+            spec = masking(spec)
+
+        return spec
+    
+    #this function is used to mask along multiple consecutive frames - see https://github.com/s3prl/s3prl/blob/master/pretrain/mockingjay/task.py
+    def _starts_to_intervals(
+        self,
+        starts: torch.Tensor,
+        consecutive: int
+    ) -> torch.Tensor:
+        tiled = starts.expand(consecutive, starts.size(0)).permute(1, 0)
+        offset = torch.arange(consecutive).expand_as(tiled)
+        intervals = tiled + offset
+        return intervals.view(-1)
+
+    def _augment_mfcc(
+        self,
+        spec: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Applies data augmentation to the given MFCC.
+
+        Args:
+            spec (torch.Tensor): the MFCC.
+
+        Returns:
+            torch.Tensor: the augmented MFCC.
+        """
+        for transformation in self.transformations:
+            time_len = spec.shape[2]
+            n_coeffs = spec.shape[1]
+            
+            if transformation == "time_mask":
+                perm_length = np.random.randint(self.mask_samples)
+                valid_start_max = max(time_len - perm_length - 1, 0)
+                chosen_starts = torch.randperm(valid_start_max + 1)[:1]
+                chosen_intervals = self._starts_to_intervals(chosen_starts, perm_length)
+                spec[:, :, chosen_intervals] = 0
+            elif transformation == "frequency_mask":
+                perm_length = np.random.randint(self.mask_samples)
+                valid_start_max = max(n_coeffs - perm_length - 1, 0)
+                chosen_starts = torch.randperm(valid_start_max + 1)[:1]
+                chosen_intervals = self._starts_to_intervals(chosen_starts, perm_length)
+                spec[:, chosen_intervals, :] = 0
         
         return spec
 

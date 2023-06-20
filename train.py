@@ -23,6 +23,14 @@ os.environ["PYTHONHASHSEED"] = str(seed)
 torch.backends.cudnn.benchmark = False
 torch.backends.cudnn.deterministic = True
 
+def seed_worker(worker_id: int):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+g = torch.Generator()
+g.manual_seed(seed)
+
 def train(
     model: nn.Module,
     dataloader: DataLoader,
@@ -164,7 +172,7 @@ def training_pipeline(
         raise NotImplementedError
     
     # creating log folder
-    log_path = os.path.join(os.getcwd(), "logs", dataset)
+    log_path = os.path.join(os.getcwd(), "logs", dataset, mode)
     os.makedirs(log_path, exist_ok=True)
     logs = pd.DataFrame()
         
@@ -183,7 +191,8 @@ def training_pipeline(
         
         optimizer = torch.optim.Adam(
             params=model.parameters(),
-            lr=0.001
+            lr=model_config["learning_rate"],
+            eps=1e-07
         )
         loss = torch.nn.CrossEntropyLoss()
         scheduler = None
@@ -206,10 +215,12 @@ def training_pipeline(
             data_augmentation_config=data_augmentation_config,
             num_workers=0,
             mode=mode,
-            shuffle=True,
+            shuffle=False,
             training=True,
             batch_size=model_config["batch_size"],
-            data_augment_target=data_augment_target
+            data_augment_target=data_augment_target,
+            worker_init_fn=seed_worker,
+            generator=g
         )
         
         # creating the validation dataloader
@@ -221,10 +232,12 @@ def training_pipeline(
             data_augmentation_config=data_augmentation_config,
             num_workers=0,
             mode=mode,
-            shuffle=True,
+            shuffle=False,
             training=False,
             batch_size=model_config["batch_size"],
-            data_augment_target=data_augment_target
+            data_augment_target=data_augment_target,
+            worker_init_fn=seed_worker,
+            generator=g
         )
         
         if total_folds != 1:
@@ -294,6 +307,7 @@ def training_pipeline(
             sep=",",
             index=False
         )
+        logs = pd.DataFrame()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -307,7 +321,7 @@ if __name__ == "__main__":
     
     # parameters defination
     k_fold = None
-    max_seconds = 15
+    max_seconds = 16
     
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]

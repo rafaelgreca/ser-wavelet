@@ -1,11 +1,12 @@
 import numpy as np
 import torch
+from copy import deepcopy
 from src.data_augmentation import AudioAugment, SpecAugment, Denoiser
 from src.features import extract_melspectrogram, extract_mfcc, extract_wavelet_from_spectrogram, extract_wavelet_from_raw_audio
 from src.features import calculate_kurtosis, calculate_skew, calculate_std
 from src.utils import pad_features
 from torch.utils.data import Dataset, DataLoader
-from typing import Dict, Union
+from typing import Dict, Union, Iterable
 
 class Dataset_Mode3(Dataset):
 
@@ -45,14 +46,13 @@ class Dataset_Mode3(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
+            audio = augment(audio)
         
         return audio
         
@@ -61,21 +61,22 @@ class Dataset_Mode3(Dataset):
         index: int
     ) -> Dict:
         batch = {}
+        audio = deepcopy(self.X[index, :, :])
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
                 self.data_augmentation_config["mode"] == "raw_audio":
-                self._apply_augmentation_raw_audio(self.X[index, :, :])
+                audio = self._apply_augmentation_raw_audio(audio)
         
-        assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
-                
+        assert audio.ndim == 2 and audio.shape[0] == 1
+        
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] in ["feature", "both"]:
+                self.data_augmentation_config["mode"] == "feature":
                 raise ValueError()
-                
+                        
         coeffs = extract_wavelet_from_raw_audio(
-            audio=self.X[index, :, :].squeeze(0),
+            audio=audio.squeeze(0),
             wavelet=self.wavelet_config["name"],
             maxlevel=self.wavelet_config["level"],
             type=self.wavelet_config["type"],
@@ -139,14 +140,13 @@ class Dataset_Mode2(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
+            audio = augment(audio)
         
         return audio
     
@@ -162,9 +162,11 @@ class Dataset_Mode2(Dataset):
                 augment = SpecAugment(
                     transformations=transformations[transformation]["transformations"],
                     p=p,
-                    mask_samples=transformations[transformation]["mask_samples"]
+                    mask_samples=transformations[transformation]["mask_samples"],
+                    feature=self.feature_config["name"]
                 )
-                audio = augment(audio)
+                
+            audio = augment(audio)
         
         return audio
     
@@ -173,16 +175,17 @@ class Dataset_Mode2(Dataset):
         index: int
     ) -> Dict:
         batch = {}
+        audio = deepcopy(self.X[index, :, :])
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] in ["raw_audio", "both"]:
-                self._apply_augmentation_raw_audio(self.X[index, :, :])
+                self.data_augmentation_config["mode"] == "raw_audio":
+                audio = self._apply_augmentation_raw_audio(audio)
         
-        assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
+        assert audio.ndim == 2 and audio.shape[0] == 1
         
         coeffs = extract_wavelet_from_raw_audio(
-            audio=self.X[index, :, :].squeeze(0),
+            audio=audio.squeeze(0),
             wavelet=self.wavelet_config["name"],
             maxlevel=self.wavelet_config["level"],
             type=self.wavelet_config["type"],
@@ -192,7 +195,7 @@ class Dataset_Mode2(Dataset):
         assert len(coeffs) == self.wavelet_config["level"] + 1
         
         # transforming the coeffs to torch
-        new_coeffs = [torch.from_numpy(coeffs[i]) for i in range(len(coeffs))]
+        new_coeffs = [torch.from_numpy(coeffs[i]).unsqueeze(0) for i in range(len(coeffs))]
 
         # extracting the mel spectrogram from each wavelet coefficient       
         feats = []
@@ -217,11 +220,9 @@ class Dataset_Mode2(Dataset):
                                         
             if self.data_augment_target is not None:
                 if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                    self.data_augmentation_config["mode"] in ["feature", "both"]:
-                    self._apply_augmentation_feature(feat)
-        
-            feat = feat.unsqueeze(0)
-            
+                    self.data_augmentation_config["mode"] == "feature":
+                    feat = self._apply_augmentation_feature(feat)
+                    
             assert feat.ndim == 3 and feat.shape[0] == 1
             
             feats.append(feat)
@@ -238,6 +239,7 @@ class Dataset_Mode2(Dataset):
             max_width=max_width
         )
         feats = torch.concat(feats, dim=0)
+        feats = feats.permute(0, 2, 1) # time and frequency axis permutation
                   
         batch["features"] = feats
         batch["labels"] = self.y[index]
@@ -281,14 +283,13 @@ class Dataset_Mode1(Dataset):
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
             elif transformation == "audioaugment":
                 augment = AudioAugment(
                     transformations=transformations[transformation]["transformations"],
                     sample_rate=sample_rate,
                     p=p
                 )
-                audio = augment(audio)
+            audio = augment(audio)
         
         return audio
     
@@ -304,9 +305,10 @@ class Dataset_Mode1(Dataset):
                 augment = SpecAugment(
                     transformations=transformations[transformation]["transformations"],
                     p=p,
-                    mask_samples=transformations[transformation]["mask_samples"]
+                    mask_samples=transformations[transformation]["mask_samples"],
+                    feature=self.feature_config["name"]
                 )
-                audio = augment(audio)
+            audio = augment(audio)
         
         return audio
     
@@ -315,17 +317,18 @@ class Dataset_Mode1(Dataset):
         index: int
     ) -> Dict:
         batch = {}
+        audio = deepcopy(self.X[index, :, :])
         
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] in ["raw_audio", "both"]:
-                self._apply_augmentation_raw_audio(self.X[index, :, :])
+                self.data_augmentation_config["mode"] == "raw_audio":
+                audio = self._apply_augmentation_raw_audio(audio)
         
-        assert self.X[index, :, :].ndim == 2 and self.X[index, :, :].shape[0] == 1
-        
+        assert audio.ndim == 2 and audio.shape[0] == 1
+                
         if self.feature_config["name"] == "melspectrogram":
             feat = extract_melspectrogram(
-                audio=self.X[index, :, :],
+                audio=audio,
                 sample_rate=self.feature_config["sample_rate"],
                 n_fft=self.feature_config["n_fft"],
                 hop_length=self.feature_config["hop_length"],
@@ -333,7 +336,7 @@ class Dataset_Mode1(Dataset):
             )
         elif self.feature_config["name"] == "mfcc":
             feat = extract_mfcc(
-                audio=self.X[index, :, :],
+                audio=audio,
                 sample_rate=self.feature_config["sample_rate"],
                 n_fft=self.feature_config["n_fft"],
                 hop_length=self.feature_config["hop_length"],
@@ -341,13 +344,15 @@ class Dataset_Mode1(Dataset):
             )
         
         assert feat.ndim == 3 and feat.shape[0] == 1
-        
+
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] in ["feature", "both"]:
-                self._apply_augmentation_feature(feat)
+                self.data_augmentation_config["mode"] == "feature":
+                feat = self._apply_augmentation_feature(feat)
         
         assert feat.ndim == 3 and feat.shape[0] == 1
+        
+        feat = feat.permute(0, 2, 1) # time and frequency axis permutation
         
         X, _ = extract_wavelet_from_spectrogram(
             spectrogram=feat.squeeze(0),
@@ -356,9 +361,9 @@ class Dataset_Mode1(Dataset):
             type=self.wavelet_config["type"],
             mode=self.wavelet_config["mode"]
         )
-        
+
         assert X.ndim == 2
-        
+
         batch["features"] = X.unsqueeze(0)
         batch["labels"] = self.y[index]
         return batch
@@ -372,6 +377,8 @@ def create_dataloader(
     data_augmentation_config: Union[Dict, None],
     data_augment_target: Union[str, None],
     mode: str,
+    worker_init_fn: Iterable,
+    generator: torch.Generator,
     num_workers: int = 0,
     shuffle: bool = True,
     training: bool = True
@@ -415,7 +422,9 @@ def create_dataloader(
         batch_size=batch_size,
         num_workers=num_workers,
         shuffle=shuffle,
-        drop_last=False
+        drop_last=False,
+        worker_init_fn=worker_init_fn,
+        generator=generator
     )
     
     return dataloader

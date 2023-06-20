@@ -196,7 +196,7 @@ def extract_wavelet_from_raw_audio(
         return datas
     
     elif type == "dwt":
-        audio = audio.cpu()
+        audio = audio.numpy()
         
         coeffs = pywt.wavedec(
             data=audio,
@@ -205,6 +205,8 @@ def extract_wavelet_from_raw_audio(
             mode=mode,
         )
         return coeffs
+    else:
+        raise NotImplementedError
     
 def extract_mfcc(
     audio: torch.Tensor,

@@ -71,7 +71,7 @@ class CNN_Mode1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.input_channels = 1
-        self.linear_input_features = 61440
+        self.linear_input_features = 276480
             
         self.model = nn.Sequential(
             nn.Conv2d(
@@ -100,16 +100,6 @@ class CNN_Mode1(nn.Module):
                 kernel_size=(2, 2)
             ),
             nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.MaxPool2d(
-                kernel_size=(2, 2)
-            ),
-            nn.Conv2d(
-                in_channels=256,
-                out_channels=512,
-                kernel_size=(2, 2)
-            ),
-            nn.BatchNorm2d(512),
             nn.ReLU(),
             nn.MaxPool2d(
                 kernel_size=(2, 2)
