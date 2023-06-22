@@ -3,107 +3,58 @@ import torch
 from copy import deepcopy
 from src.data_augmentation import AudioAugment, SpecAugment, Denoiser
 from src.features import extract_melspectrogram, extract_mfcc, extract_wavelet_from_spectrogram, extract_wavelet_from_raw_audio
-from src.features import calculate_kurtosis, calculate_skew, calculate_std
 from src.utils import pad_features
 from torch.utils.data import Dataset, DataLoader
 from typing import Dict, Union, Iterable
 
-class Dataset_Mode3(Dataset):
+def _apply_augmentation_raw_audio(
+    audio: torch.Tensor,
+    data_augmentation_config: Dict,
+    feature_config: Dict
+) -> torch.Tensor:
+    transformations = data_augmentation_config["techniques"]
+    p = data_augmentation_config["p"]
+    sample_rate = feature_config["sample_rate"]
+    
+    for transformation in transformations.keys():
+        if transformation == "denoiser":
+            augment = Denoiser(
+                filters=transformations[transformation]["filters"],
+                sample_rate=sample_rate,
+                p=p
+            )
+        elif transformation == "audioaugment":
+            augment = AudioAugment(
+                transformations=transformations[transformation]["transformations"],
+                sample_rate=sample_rate,
+                p=p
+            )
+        audio = augment(audio)
+    
+    return audio
 
-    def __init__(
-        self,
-        X: torch.Tensor,
-        y: torch.Tensor,
-        feature_config: Dict,
-        wavelet_config: Dict,
-        data_augmentation_config: Union[Dict, None],
-        training: bool,
-        data_augment_target: Union[str, None]
-    ) -> None:
-        self.X = X
-        self.y = y
-        self.feature_config = feature_config
-        self.wavelet_config = wavelet_config
-        self.data_augmentation_config = data_augmentation_config
-        self.training = training
-        self.data_augment_target = data_augment_target
-        
-    def __len__(self):
-        return len(self.y)
+def _apply_augmentation_feature(
+    audio: torch.Tensor,
+    data_augmentation_config: Dict,
+    feature_config: Dict
+) -> torch.Tensor:
+    transformations = data_augmentation_config["techniques"]
+    p = data_augmentation_config["p"]
     
-    def _apply_augmentation_raw_audio(
-        self,
-        audio: torch.Tensor
-    ) -> torch.Tensor:
-        transformations = self.data_augmentation_config["techniques"]
-        p = self.data_augmentation_config["p"]
-        sample_rate = self.feature_config["sample_rate"]
-        
-        for transformation in transformations.keys():
-            if transformation == "denoiser":
-                augment = Denoiser(
-                    filters=transformations[transformation]["filters"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            elif transformation == "audioaugment":
-                augment = AudioAugment(
-                    transformations=transformations[transformation]["transformations"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            audio = augment(audio)
-        
-        return audio
-        
-    def __getitem__(
-        self,
-        index: int
-    ) -> Dict:
-        batch = {}
-        audio = deepcopy(self.X[index, :, :])
-        
-        if self.data_augment_target is not None:
-            if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "raw_audio":
-                audio = self._apply_augmentation_raw_audio(audio)
-        
-        assert audio.ndim == 2 and audio.shape[0] == 1
-        
-        if self.data_augment_target is not None:
-            if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
-                self.data_augmentation_config["mode"] == "feature":
-                raise ValueError()
-                        
-        coeffs = extract_wavelet_from_raw_audio(
-            audio=audio.squeeze(0),
-            wavelet=self.wavelet_config["name"],
-            maxlevel=self.wavelet_config["level"],
-            type=self.wavelet_config["type"],
-            mode=self.wavelet_config["mode"]
-        )
-        
-        assert len(coeffs) == self.wavelet_config["level"] + 1
-        
-        # extracting the features from the wavelet's coefficients
-        feats = []
-        
-        stds = calculate_std(coeffs)
-        skews = calculate_skew(coeffs)
-        kurtosis = calculate_kurtosis(coeffs)
-        
-        feats.extend(stds)
-        feats.extend(skews)
-        feats.extend(kurtosis)
-        
-        assert len(feats) == ((self.wavelet_config["level"] + 1) * 3)
-                
-        batch["features"] = torch.as_tensor(feats)
-        batch["labels"] = self.y[index]
-        return batch
+    for transformation in transformations.keys():
+        if transformation == "specaugment":
+            augment = SpecAugment(
+                transformations=transformations[transformation]["transformations"],
+                p=p,
+                mask_samples=transformations[transformation]["mask_samples"],
+                feature=feature_config["name"]
+            )
+            
+        audio = augment(audio)
     
+    return audio
+
 class Dataset_Mode2(Dataset):
-    
     def __init__(
         self,
         X: torch.Tensor,
@@ -124,52 +75,7 @@ class Dataset_Mode2(Dataset):
         
     def __len__(self):
         return len(self.y)
-    
-    def _apply_augmentation_raw_audio(
-        self,
-        audio: torch.Tensor
-    ) -> torch.Tensor:
-        transformations = self.data_augmentation_config["techniques"]
-        p = self.data_augmentation_config["p"]
-        sample_rate = self.feature_config["sample_rate"]
         
-        for transformation in transformations.keys():
-            if transformation == "denoiser":
-                augment = Denoiser(
-                    filters=transformations[transformation]["filters"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            elif transformation == "audioaugment":
-                augment = AudioAugment(
-                    transformations=transformations[transformation]["transformations"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            audio = augment(audio)
-        
-        return audio
-    
-    def _apply_augmentation_feature(
-        self,
-        audio: torch.Tensor
-    ) -> torch.Tensor:
-        transformations = self.data_augmentation_config["techniques"]
-        p = self.data_augmentation_config["p"]
-        
-        for transformation in transformations.keys():
-            if transformation == "specaugment":
-                augment = SpecAugment(
-                    transformations=transformations[transformation]["transformations"],
-                    p=p,
-                    mask_samples=transformations[transformation]["mask_samples"],
-                    feature=self.feature_config["name"]
-                )
-                
-            audio = augment(audio)
-        
-        return audio
-    
     def __getitem__(
         self,
         index: int
@@ -180,7 +86,11 @@ class Dataset_Mode2(Dataset):
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
                 self.data_augmentation_config["mode"] == "raw_audio":
-                audio = self._apply_augmentation_raw_audio(audio)
+                audio = _apply_augmentation_raw_audio(
+                    audio=audio,
+                    data_augmentation_config=self.data_augmentation_config,
+                    feature_config=self.feature_config
+                )
         
         assert audio.ndim == 2 and audio.shape[0] == 1
         
@@ -221,8 +131,12 @@ class Dataset_Mode2(Dataset):
             if self.data_augment_target is not None:
                 if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
                     self.data_augmentation_config["mode"] == "feature":
-                    feat = self._apply_augmentation_feature(feat)
-                    
+                    feat = _apply_augmentation_feature(
+                        audio=feat,
+                        data_augmentation_config=self.data_augmentation_config,
+                        feature_config=self.feature_config
+                    )
+                                        
             assert feat.ndim == 3 and feat.shape[0] == 1
             
             feats.append(feat)
@@ -246,7 +160,6 @@ class Dataset_Mode2(Dataset):
         return batch
     
 class Dataset_Mode1(Dataset):
-
     def __init__(
         self,
         X: torch.Tensor,
@@ -267,51 +180,7 @@ class Dataset_Mode1(Dataset):
         
     def __len__(self):
         return len(self.y)
-    
-    def _apply_augmentation_raw_audio(
-        self,
-        audio: torch.Tensor
-    ) -> torch.Tensor:
-        transformations = self.data_augmentation_config["techniques"]
-        p = self.data_augmentation_config["p"]
-        sample_rate = self.feature_config["sample_rate"]
         
-        for transformation in transformations.keys():
-            if transformation == "denoiser":
-                augment = Denoiser(
-                    filters=transformations[transformation]["filters"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            elif transformation == "audioaugment":
-                augment = AudioAugment(
-                    transformations=transformations[transformation]["transformations"],
-                    sample_rate=sample_rate,
-                    p=p
-                )
-            audio = augment(audio)
-        
-        return audio
-    
-    def _apply_augmentation_feature(
-        self,
-        audio: torch.Tensor
-    ) -> torch.Tensor:
-        transformations = self.data_augmentation_config["techniques"]
-        p = self.data_augmentation_config["p"]
-        
-        for transformation in transformations.keys():
-            if transformation == "specaugment":
-                augment = SpecAugment(
-                    transformations=transformations[transformation]["transformations"],
-                    p=p,
-                    mask_samples=transformations[transformation]["mask_samples"],
-                    feature=self.feature_config["name"]
-                )
-            audio = augment(audio)
-        
-        return audio
-    
     def __getitem__(
         self,
         index: int
@@ -322,7 +191,11 @@ class Dataset_Mode1(Dataset):
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
                 self.data_augmentation_config["mode"] == "raw_audio":
-                audio = self._apply_augmentation_raw_audio(audio)
+                audio = _apply_augmentation_raw_audio(
+                    audio=audio,
+                    data_augmentation_config=self.data_augmentation_config,
+                    feature_config=self.feature_config
+                )
         
         assert audio.ndim == 2 and audio.shape[0] == 1
                 
@@ -348,7 +221,11 @@ class Dataset_Mode1(Dataset):
         if self.data_augment_target is not None:
             if self.y[index].argmax(dim=-1, keepdim=False).item() in self.data_augment_target and self.training and \
                 self.data_augmentation_config["mode"] == "feature":
-                feat = self._apply_augmentation_feature(feat)
+                feat = _apply_augmentation_feature(
+                    audio=feat,
+                    data_augmentation_config=self.data_augmentation_config,
+                    feature_config=self.feature_config
+                )
         
         assert feat.ndim == 3 and feat.shape[0] == 1
         
@@ -397,16 +274,6 @@ def create_dataloader(
         )
     elif mode == "mode_2":
         dataset = Dataset_Mode2(
-            X=X,
-            y=y,
-            feature_config=feature_config,
-            wavelet_config=wavelet_config,
-            data_augmentation_config=data_augmentation_config,
-            training=training,
-            data_augment_target=data_augment_target
-        )
-    elif mode == "mode_3":
-        dataset = Dataset_Mode3(
             X=X,
             y=y,
             feature_config=feature_config,

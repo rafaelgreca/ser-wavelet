@@ -66,11 +66,7 @@ if __name__ == "__main__":
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]
     
-    if params["mode"] != "mode_3":
-        feat_config = params["feature"]
-    else:
-        feat_config = {}
-        
+    feat_config = params["feature"]
     feat_config["sample_rate"] = int(params["sample_rate"])
     wavelet_config = params["wavelet"]
     

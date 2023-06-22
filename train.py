@@ -328,11 +328,7 @@ if __name__ == "__main__":
     
     max_samples = max_seconds * int(params["sample_rate"])
     
-    if params["mode"] != "mode_3":
-        feat_config = params["feature"]
-    else:
-        feat_config = {}
-        
+    feat_config = params["feature"]
     feat_config["sample_rate"] = int(params["sample_rate"])
     data_augmentation_config = params["data_augmentation"]
     wavelet_config = params["wavelet"]
