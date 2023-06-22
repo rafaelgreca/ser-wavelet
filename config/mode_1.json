@@ -1,7 +1,7 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
     "output_path": "./features",
-    "sample_rate": 8000,
+    "sample_rate": 16000,
     "dataset": "propor2022",
     "mode": "mode_1",
     "wavelet": {
@@ -29,7 +29,7 @@
     },
     "model": {
         "name": "cnn",
-        "use_gpu": false,
+        "use_gpu": true,
         "output_path": "./checkpoints",
         "batch_size": 32,
         "learning_rate": 0.001,

@@ -46,7 +46,7 @@ class CNN_Mode2(nn.Module):
         ) 
         
         self.output_layer = nn.Linear(
-            in_features=595200,
+            in_features=1190400,
             out_features=3
         )
         

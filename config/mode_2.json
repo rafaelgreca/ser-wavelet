@@ -1,7 +1,7 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
     "output_path": "./features",
-    "sample_rate": 8000,
+    "sample_rate": 16000,
     "dataset": "propor2022",
     "mode": "mode_2",
     "wavelet": {
@@ -11,7 +11,7 @@
         "mode": "symmetric"
     },
     "feature": {
-        "name": "melspectrogram",
+        "name": "mel_spectrogram",
         "n_fft": 1024,
         "hop_length": 256,
         "n_mels": 64
