@@ -8,8 +8,7 @@ import torch.nn as nn
 from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.cnn import CNN_Mode1, CNN_Mode2
-from src.models.cnn_lstm import CNN_LSTM
-from src.models.mlp import MLP
+from src.models.cnn2 import CNN2_Mode1, CNN2_Mode2
 from typing import Optional, Union, Tuple, List
 
 def pad_features(
@@ -54,22 +53,17 @@ def choose_model(
         nn.Module: the created model.
     """
     if mode == "mode_1":
-        if model_name == "mlp":
-            raise ValueError(f"The model {model_name} is not supported for the mode {mode}.")
-        elif model_name == "cnn":
+        if model_name == "cnn":
             model = CNN_Mode1().to(device)
-        elif model_name == "cnn_lstm":
-            model = CNN_LSTM().to(device)
+        elif model_name == "cnn2":
+            model = CNN2_Mode1().to(device)
     elif mode == "mode_2":
-        if model_name == "mlp":
-            raise ValueError(f"The model {model_name} is not supported for the mode {mode}.")
-        elif model_name == "cnn":
+        if model_name == "cnn":
             model = CNN_Mode2().to(device)
-    elif mode == "mode_3":
-        if model_name != "mlp":
-            raise ValueError(f"The only supported model for the {mode} is mlp.")
-        else:
-            model = MLP().to(device)
+        elif model_name == "cnn2":
+            model = CNN2_Mode2().to(device)
+    else:
+        raise ValueError("Unknown mode")
     
     return model
 

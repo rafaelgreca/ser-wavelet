@@ -28,8 +28,8 @@
         }
     },
     "model": {
-        "name": "cnn",
-        "use_gpu": false,
+        "name": "cnn2",
+        "use_gpu": true,
         "output_path": "./checkpoints",
         "batch_size": 16,
         "learning_rate": 0.001,

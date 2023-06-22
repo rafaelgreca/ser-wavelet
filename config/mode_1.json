@@ -24,6 +24,9 @@
             "specaugment": {
                 "transformations": ["time_mask", "frequency_mask"],
                 "mask_samples": 10
+            },
+            "mixup": {
+                "alpha": 1.0
             }
         }
     },

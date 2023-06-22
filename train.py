@@ -8,10 +8,11 @@ import pandas as pd
 import argparse
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files, choose_model
+from src.data_augmentation import Mixup
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Union
 from sklearn.metrics import classification_report
 
 # making sure the experiments are reproducible
@@ -36,7 +37,8 @@ def train(
     dataloader: DataLoader,
     optimizer: torch.optim.Adam,
     loss: torch.nn.CrossEntropyLoss,
-    device: torch.device
+    device: torch.device,
+    mixer: Union[None, Mixup]
 ) -> Tuple[float, float]:
     """
     Function responsible for the model training.
@@ -64,6 +66,12 @@ def train(
         data = data.to(dtype=torch.float32)
         target = target.to(dtype=torch.float32)
         
+        if not mixer is None:
+            data, target = mixer(
+                x=data,
+                y=target
+            )
+            
         output = model(data)
 
         l = loss(output, target)
@@ -193,13 +201,20 @@ def training_pipeline(
         optimizer = torch.optim.Adam(
             params=model.parameters(),
             lr=model_config["learning_rate"],
-            eps=1e-07
+            eps=1e-07,
+            weight_decay=0
         )
         loss = torch.nn.CrossEntropyLoss()
         scheduler = None
+        mixer = None
     
         if model_config["use_lr_scheduler"]:
             scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
+        
+        if "mixup" in data_augmentation_config["techniques"].keys():
+            mixer = Mixup(
+                alpha=data_augmentation_config["techniques"]["mixup"]["alpha"]
+            )
                 
         # creating the model checkpoint object
         sbm = SaveBestModel(
@@ -259,7 +274,8 @@ def training_pipeline(
                 dataloader=training_dataloader,
                 optimizer=optimizer,
                 model=model,
-                loss=loss
+                loss=loss,
+                mixer=mixer
             )
             
             valid_f1, valid_loss = evaluate(
