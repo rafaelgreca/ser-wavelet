@@ -7,14 +7,14 @@
     "wavelet": {
         "type": "dwt",
         "name": "db8",
-        "level": 4,
+        "level": 3,
         "mode": "symmetric"
     },
     "feature": {
         "name": "mel_spectrogram",
         "n_fft": 512,
         "hop_length": 256,
-        "n_mfcc": 64
+        "n_mels": 128
     },
     "data_augmentation": {
         "mode": "feature",
