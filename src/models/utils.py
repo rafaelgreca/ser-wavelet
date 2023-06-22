@@ -82,9 +82,9 @@ class SaveBestModel:
                 path = os.path.join(self.output_dir, f"{self.model_name}.pth")
                 
             torch.save({
-                    "epoch": epoch,
-                    "model_state_dict": model.state_dict(),
-                    "optimizer_state_dict": optimizer.state_dict(),
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict()
                 },
                 path,
             )

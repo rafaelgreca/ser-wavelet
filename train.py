@@ -158,6 +158,7 @@ def training_pipeline(
     dataset: str
 ) -> None:
     total_folds = len(training_data)
+    best_valid_f1, best_valid_loss = [], []
         
     if dataset == "propor2022":
         if data_augmentation_config["target"] == "majority":
@@ -301,6 +302,9 @@ def training_pipeline(
         print(f"Best Loss: {sbm.best_valid_loss}")
         print("*" * 40); print();
         
+        best_valid_loss.append(sbm.best_valid_loss)
+        best_valid_f1.append(sbm.best_valid_f1)
+                
         logs = logs.reset_index(drop=True)
         logs.to_csv(
             path_or_buf=os.path.join(log_path, f"fold{fold if total_folds != 1 else ''}.csv"),
@@ -308,6 +312,12 @@ def training_pipeline(
             index=False
         )
         logs = pd.DataFrame()
+    
+    # printing the best result
+    print(); print("#" * 40);
+    print(f"Best F1-Score: {best_valid_f1}")
+    print(f"Best Loss: {best_valid_loss}")
+    print("#" * 40); print();
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

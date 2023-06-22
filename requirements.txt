@@ -131,6 +131,7 @@ torch==1.13.1
 torch-audiomentations==0.11.0
 torch-pitch-shift==1.2.2
 torchaudio==0.13.1
+torchlibrosa==0.1.0
 torchvision==0.14.1
 tornado==6.2
 traitlets @ file:///home/conda/feedstock_root/build_artifacts/traitlets_1675110562325/work
