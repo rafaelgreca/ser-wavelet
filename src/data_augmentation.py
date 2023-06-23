@@ -207,7 +207,7 @@ class Denoiser:
             sos, signal, zi=sosfilt_zi(sos) * signal[0]
         )
         processed_samples = processed_samples.astype(np.float32)
-        processed_samples = torch.from_numpy(processed_samples.unsqueeze(0))
+        processed_samples = torch.from_numpy(processed_samples).unsqueeze(0)
         return processed_samples
     
 class SpecAugment:
@@ -257,7 +257,7 @@ class SpecAugment:
         rand = torch.rand(1).item()
 
         if rand < self.p:
-            if self.feature == "melspectrogram":
+            if self.feature == "mel_spectrogram":
                 spec = self._augment_mel_spec(spec)
             elif self.feature == "mfcc":
                 spec = self._augment_mfcc(spec)
@@ -349,7 +349,7 @@ class Mixup:
         self,
         x: torch.Tensor,
         y: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Applies the mixup technique to the given x and y.
 
@@ -358,7 +358,7 @@ class Mixup:
             y (torch.Tensor): the features label.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: the mixed x and y, respectively.
+            Tuple[torch.Tensor, torch.Tensor]: the mixed x and y, respectively.
         """
         if self.alpha > 0:
             self.lam = np.random.beta(self.alpha, self.alpha, 1)[0]
@@ -371,3 +371,105 @@ class Mixup:
         mixed_x = self.lam * x + (1 - self.lam) * x[index, :]
         mixed_y = self.lam * y + (1 - self.lam) * y[index]
         return mixed_x, mixed_y
+
+class Specmix:
+    """
+    Class responsible for applying the SpecMix data augmentation technique.
+    
+    All credits to: https://github.com/anas-rz/specmix-pytorch/blob/main/specmix.py
+    """
+    def __init__(
+        self,
+        min_band_size: int,
+        max_band_size: int,
+        max_frequency_bands: int,
+        max_time_bands: int,
+        device: torch.device,
+        p: float = 1.0,
+    ) -> None:
+        """
+        Applies the SpecMix data augmentation.
+
+        Args:
+            min_band_size (int): the minimum band size.
+            max_band_size (int): the maximum band size.
+            max_frequency_bands (int): the maximum frequency bands.
+            max_time_bands (int): the maximum time bands.
+            device (torch.device): the device which the code is running on.
+            p (float, optional): the probability that the technique
+                                 will be applied. Defaults to 1.0.
+        """
+        self.min_band_size = min_band_size
+        self.max_band_size = max_band_size
+        self.max_frequency_bands = max_frequency_bands
+        self.max_time_bands = max_time_bands
+        self.device = device
+        self.p = p
+
+    def _get_band(
+        self,
+        x: torch.Tensor,
+        band_type: str,
+        mask: torch.Tensor
+    ) -> torch.Tensor: 
+        assert band_type.lower() in ["freq", "time"], f"band_type must be in ['freq', 'time']"
+      
+        if band_type.lower() == "freq":
+            axis = 3
+        else:
+            axis = 2
+      
+        band_size =  torch.randint(low=self.min_band_size, high=self.max_band_size, size=(1,)).item()
+        mask_start = torch.randint(low=0, high=x.size()[axis] - band_size, size=(1,)).item()
+        mask_end = mask_start + band_size
+        
+        if band_type.lower() == "freq":
+            mask[:, :, mask_start:mask_end] = 1    
+        elif band_type.lower() == "time":
+            mask[:, mask_start:mask_end, :] = 1
+            
+        return mask
+
+    def __call__(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Applies the specmix technique to the given x and y.
+
+        Args:
+            x (torch.Tensor): the data features.
+            y (torch.Tensor): the features label.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: the specmixed x and y, respectively.
+        """
+        rand = torch.rand(1).item()
+
+        if rand < self.p:
+            batch_size = x.size()[0]
+            index = torch.randperm(batch_size)
+            mask = torch.zeros(x.size()[1:4]).to(device=self.device)
+                            
+            num_frequency_bands = torch.randint(low=1, high=self.max_frequency_bands, size=(1,)).item()
+            for _ in range(1, num_frequency_bands):
+                mask = self._get_band(
+                    x=x,
+                    band_type="freq",
+                    mask=mask
+                )
+                
+            num_time_bands = torch.randint(low=1, high=self.max_time_bands, size=(1,)).item()
+            for _ in range(1, num_time_bands):
+                mask = self._get_band(
+                    x=x,
+                    band_type="time",
+                    mask=mask
+                )
+            
+            lam = torch.sum(mask) / (x.size()[2] * x.size()[3])
+            x = x * (1 - mask) + x[index, :] * mask
+            y = y * (1 - lam) + y[index] * (lam)
+            
+        return x, y

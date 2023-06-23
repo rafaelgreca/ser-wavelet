@@ -96,7 +96,7 @@ class CNN2_Mode1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.in_channels = 1
-        self.linear_input_features = 362496
+        self.linear_input_features = 1406464
         
         self.cnn = nn.Sequential(
             FLB(

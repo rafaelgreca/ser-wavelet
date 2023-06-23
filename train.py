@@ -8,7 +8,7 @@ import pandas as pd
 import argparse
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files, choose_model
-from src.data_augmentation import Mixup
+from src.data_augmentation import Mixup, Specmix
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
@@ -201,19 +201,30 @@ def training_pipeline(
         optimizer = torch.optim.Adam(
             params=model.parameters(),
             lr=model_config["learning_rate"],
-            eps=1e-07,
-            weight_decay=0
+            weight_decay=0,
+            betas=(0.9, 0.98),
+            eps=1e-9
         )
         loss = torch.nn.CrossEntropyLoss()
         scheduler = None
         mixer = None
-    
+        
         if model_config["use_lr_scheduler"]:
             scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
         
         if "mixup" in data_augmentation_config["techniques"].keys():
             mixer = Mixup(
                 alpha=data_augmentation_config["techniques"]["mixup"]["alpha"]
+            )
+        
+        if "specmix" in data_augmentation_config["techniques"].keys():
+            mixer = Specmix(
+                p=data_augmentation_config["p"],
+                min_band_size=data_augmentation_config["techniques"]["specmix"]["min_band_size"],
+                max_band_size=data_augmentation_config["techniques"]["specmix"]["max_band_size"],
+                max_frequency_bands=data_augmentation_config["techniques"]["specmix"]["max_frequency_bands"],
+                max_time_bands=data_augmentation_config["techniques"]["specmix"]["max_time_bands"],
+                device=device
             )
                 
         # creating the model checkpoint object
