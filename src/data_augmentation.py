@@ -473,3 +473,80 @@ class Specmix:
             y = y * (1 - lam) + y[index] * (lam)
             
         return x, y
+
+class Cutmix:
+    """
+    Class responsible for applying the Cutmix data augmentation technique.
+    """
+    def __init__(
+        self,
+        alpha: float = 1.0,
+        p: float = 1.0
+    ) -> None:
+        """
+        Args:
+            alpha (float, optional): the alpha that will be used to extract sample
+                                     from the beta distribution. Defaults to 1.0.
+            p (float, optional): the probability of the technique being applied.
+                                 Defaults to 1.0.
+        """
+        self.alpha = alpha
+        self.lam = 0.0
+        self.p = p
+    
+    def rand_bbox(
+        self,
+        size: Tuple,
+        lam: float
+    ) -> Tuple[int, int, int, int]:
+        W = size[2]
+        H = size[3]
+        cut_rat = np.sqrt(1. - lam)
+        cut_w = np.int(W * cut_rat)
+        cut_h = np.int(H * cut_rat)
+
+        # uniform
+        cx = np.random.randint(W)
+        cy = np.random.randint(H)
+
+        bbx1 = np.clip(cx - cut_w // 2, 0, W)
+        bby1 = np.clip(cy - cut_h // 2, 0, H)
+        bbx2 = np.clip(cx + cut_w // 2, 0, W)
+        bby2 = np.clip(cy + cut_h // 2, 0, H)
+
+        print(bbx1, bby1, bbx2, bby2)
+        return bbx1, bby1, bbx2, bby2
+
+    def __call__(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Applies the mixup technique to the given x and y.
+
+        Args:
+            x (torch.Tensor): the data features.
+            y (torch.Tensor): the features label.
+
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor]: the mixed x and y, respectively.
+        """
+        rand = torch.rand(1).item()
+
+        if self.alpha > 0:
+            self.lam = np.random.beta(self.alpha, self.alpha, 1)[0]
+        else:
+            self.lam = 1
+        
+        if rand < self.p:
+            batch_size = x.size()[0]
+            index = torch.randperm(batch_size)
+            
+            bbx1, bby1, bbx2, bby2 = self.rand_bbox(x.size(), self.lam)
+            self.lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (x.size()[-1] * x.size()[-2]))
+            
+            x[:, :, bbx1:bbx2, bby1:bby2] = x[index, :, bbx1:bbx2, bby1:bby2]
+            y = y * self.lam + y[index] * (1 - self.lam)
+            
+        return x, y
