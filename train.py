@@ -8,7 +8,7 @@ import pandas as pd
 import argparse
 from src.dataset import create_dataloader
 from src.utils import feature_extraction_pipeline, read_features_files, choose_model
-from src.data_augmentation import Mixup, Specmix
+from src.data_augmentation import Mixup, Specmix, Cutmix
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
@@ -225,6 +225,12 @@ def training_pipeline(
                 max_frequency_bands=data_augmentation_config["techniques"]["specmix"]["max_frequency_bands"],
                 max_time_bands=data_augmentation_config["techniques"]["specmix"]["max_time_bands"],
                 device=device
+            )
+        
+        if "cutmix" in data_augmentation_config["techniques"].keys():
+            mixer = Cutmix(
+                alpha=data_augmentation_config["techniques"]["cutmix"]["alpha"],
+                p=data_augmentation_config["p"]
             )
                 
         # creating the model checkpoint object

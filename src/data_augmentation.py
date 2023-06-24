@@ -499,6 +499,16 @@ class Cutmix:
         size: Tuple,
         lam: float
     ) -> Tuple[int, int, int, int]:
+        """
+        Select the box area boundary of the data.
+
+        Args:
+            size (Tuple): the data size.
+            lam (float): the lambda value.
+
+        Returns:
+            Tuple[int, int, int, int]: the boundary box area coordinates.
+        """
         W = size[2]
         H = size[3]
         cut_rat = np.sqrt(1. - lam)
@@ -514,7 +524,6 @@ class Cutmix:
         bbx2 = np.clip(cx + cut_w // 2, 0, W)
         bby2 = np.clip(cy + cut_h // 2, 0, H)
 
-        print(bbx1, bby1, bbx2, bby2)
         return bbx1, bby1, bbx2, bby2
 
     def __call__(
