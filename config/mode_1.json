@@ -31,7 +31,7 @@
         }
     },
     "model": {
-        "name": "cnn",
+        "name": "cnn3",
         "use_gpu": true,
         "output_path": "./checkpoints",
         "batch_size": 16,
