@@ -23,13 +23,14 @@ def _apply_augmentation_raw_audio(
                 sample_rate=sample_rate,
                 p=p
             )
+            audio = augment(audio)
         elif transformation == "audioaugment":
             augment = AudioAugment(
                 transformations=transformations[transformation]["transformations"],
                 sample_rate=sample_rate,
                 p=p
             )
-        audio = augment(audio)
+            audio = augment(audio)
     
     return audio
 
@@ -49,8 +50,7 @@ def _apply_augmentation_feature(
                 mask_samples=transformations[transformation]["mask_samples"],
                 feature=feature_config["name"]
             )
-            
-        audio = augment(audio)
+            audio = augment(audio)
     
     return audio
 

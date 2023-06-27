@@ -21,9 +21,8 @@
         "target": "all",
         "p": 1,
         "techniques": {
-            "specaugment": {
-                "transformations": ["time_mask", "frequency_mask"],
-                "mask_samples": 10
+            "cutmix": {
+                "alpha": 1.0
             }
         }
     },
@@ -34,7 +33,7 @@
         "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,
-        "use_lr_scheduler": true
+        "use_lr_scheduler": false
     },
     "kfold": {
         "num_k": 5

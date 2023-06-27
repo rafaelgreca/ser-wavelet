@@ -7,6 +7,9 @@ from torch.nn.functional import one_hot
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from typing import Tuple, List
 
+# making sure the experiments are reproducible
+seed = 2109
+
 def one_hot_encoder(
     labels: torch.Tensor,
     num_classes: int = -1
@@ -53,7 +56,8 @@ def split_data(
     if not k_fold is None:
         skf = StratifiedKFold(
             n_splits=k_fold,
-            shuffle=True
+            shuffle=True,
+            random_state=seed
         )
             
         for i, (train_index, test_index) in enumerate(skf.split(X, y)):        
@@ -82,7 +86,8 @@ def split_data(
             y,
             test_size=0.2,
             stratify=y,
-            shuffle=True
+            shuffle=True,
+            random_state=seed
         )
         
         if apply_one_hot_encoder:
