@@ -9,7 +9,7 @@ from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.cnn import CNN_Mode1, CNN_Mode2
 from src.models.cnn2 import CNN2_Mode1, CNN2_Mode2
-from src.models.cnn3 import CNN3_Mode1, CNN3_Mode2
+from src.models.cnn3 import Transfer_CNN10, CNN3_Mode2
 from typing import Optional, Union, Tuple, List
 
 def pad_features(
@@ -59,7 +59,7 @@ def choose_model(
         elif model_name == "cnn2":
             model = CNN2_Mode1().to(device)
         elif model_name == "cnn3":
-            model = CNN3_Mode1().to(device)
+            model = Transfer_CNN10(load_pretrained=True, freeze_base=False).to(device)
     elif mode == "mode_2":
         if model_name == "cnn":
             model = CNN_Mode2().to(device)

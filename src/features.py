@@ -1,7 +1,7 @@
 import torch
 import torchaudio
 import pywt
-from typing import Union, List
+from typing import Union, List, Tuple
 
 def extract_wavelet_from_spectrogram(
     spectrogram: torch.Tensor,
@@ -143,7 +143,9 @@ def extract_melspectrogram(
     sample_rate: int,
     n_fft: int,
     hop_length: int,
-    n_mels: int
+    n_mels: int,
+    f_min: float = 0,
+    f_max: Tuple[float, None] = None
 ) -> torch.Tensor:
     """
     Extracts the mel spectrogram of a given audio.
@@ -154,6 +156,8 @@ def extract_melspectrogram(
         n_fft (int): the number of fft.
         hop_length (int): the hop length.
         n_mels (int): the number of mels.
+        f_min (float): the minimum frequency. Default is 0.
+        f_max (float): the maximum frequency. Default is None.
         
     Returns:
         torch.Tensor: the extracted Mel Spectrogram.
@@ -162,7 +166,9 @@ def extract_melspectrogram(
         sample_rate=sample_rate,
         n_fft=n_fft,
         hop_length=hop_length,
-        n_mels=n_mels
+        n_mels=n_mels,
+        f_min=f_min,
+        f_max=f_max
     )
     mel_spectrogram = transform(audio)
     return mel_spectrogram

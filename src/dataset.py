@@ -117,7 +117,9 @@ class Dataset_Mode2(Dataset):
                     sample_rate=self.feature_config["sample_rate"],
                     n_fft=self.feature_config["n_fft"],
                     hop_length=self.feature_config["hop_length"],
-                    n_mels=self.feature_config["n_mels"]
+                    n_mels=self.feature_config["n_mels"],
+                    f_min=self.feature_config["f_min"],
+                    f_max=self.feature_config["f_max"]
                 )
             elif self.feature_config["name"] == "mfcc":
                 feat = extract_mfcc(
@@ -205,7 +207,9 @@ class Dataset_Mode1(Dataset):
                 sample_rate=self.feature_config["sample_rate"],
                 n_fft=self.feature_config["n_fft"],
                 hop_length=self.feature_config["hop_length"],
-                n_mels=self.feature_config["n_mels"]
+                n_mels=self.feature_config["n_mels"],
+                f_min=self.feature_config["f_min"],
+                f_max=self.feature_config["f_max"]
             )
         elif self.feature_config["name"] == "mfcc":
             feat = extract_mfcc(
