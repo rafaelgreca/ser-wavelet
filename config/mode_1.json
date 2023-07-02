@@ -1,22 +1,22 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
-    "output_path": "./features",
-    "sample_rate": 32000,
+    "output_path": "./features8k",
+    "sample_rate": 8000,
     "dataset": "propor2022",
     "mode": "mode_1",
     "wavelet": {
         "type": "dwt",
-        "name": "db4",
+        "name": "db6",
         "level": 3,
         "mode": "symmetric"
     },
     "feature": {
         "name": "mel_spectrogram",
-        "n_fft": 1024,
-        "hop_length": 320,
-        "n_mels": 64,
+        "n_fft": 400,
+        "hop_length": 200,
+        "n_mels": 128,
         "f_min": 0,
-        "f_max": 32000
+        "f_max": 4000
     },
     "data_augmentation": {
         "mode": "feature",
@@ -25,7 +25,7 @@
         "techniques": {
             "specaugment": {
                 "transformations": ["frequency_mask", "time_mask"],
-                "mask_samples": 8
+                "mask_samples": 10
             }
         }
     },
@@ -33,7 +33,7 @@
         "name": "cnn3",
         "use_gpu": false,
         "output_path": "./checkpoints",
-        "batch_size": 16,
+        "batch_size": 32,
         "learning_rate": 0.001,
         "epochs": 100,
         "use_lr_scheduler": false

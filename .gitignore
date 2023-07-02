@@ -1,4 +1,7 @@
 features/
+features32k/
+features16k/
+features8k/
 pretrained/
 checkpoints/
 logs/

@@ -190,7 +190,7 @@ class Transfer_CNN10(nn.Module):
         self.fc_transfer = nn.Linear(512, 3, bias=True)
 
         if load_pretrained:
-            path = "./pretrained/Cnn10_mAP=0.380.pth"
+            path = "../pretrained/Cnn10_mAP=0.380.pth"
             self.load_from_pretrain(
                 pretrained_checkpoint_path=path
             )

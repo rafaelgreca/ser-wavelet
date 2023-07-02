@@ -59,7 +59,7 @@ def choose_model(
         elif model_name == "cnn2":
             model = CNN2_Mode1().to(device)
         elif model_name == "cnn3":
-            model = Transfer_CNN10(load_pretrained=True, freeze_base=False).to(device)
+            model = Transfer_CNN10(load_pretrained=False, freeze_base=False).to(device)
     elif mode == "mode_2":
         if model_name == "cnn":
             model = CNN_Mode2().to(device)

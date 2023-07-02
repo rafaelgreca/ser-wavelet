@@ -6,8 +6,9 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import argparse
+from test import test
 from src.dataset import create_dataloader
-from src.utils import feature_extraction_pipeline, read_features_files, choose_model
+from src.utils import read_feature, feature_extraction_pipeline, read_features_files, choose_model
 from src.data_augmentation import Mixup, Specmix, Cutmix
 from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
@@ -38,7 +39,7 @@ def train(
     optimizer: torch.optim.Adam,
     loss: torch.nn.CrossEntropyLoss,
     device: torch.device,
-    mixer: Union[None, Mixup]
+    mixer: Union[None, Mixup, Specmix, Cutmix]
 ) -> Tuple[float, float]:
     """
     Function responsible for the model training.
@@ -166,7 +167,7 @@ def training_pipeline(
     dataset: str
 ) -> None:
     total_folds = len(training_data)
-    best_valid_f1, best_valid_loss = [], []
+    best_valid_f1, best_train_f1, best_test_f1 = [], [], []
         
     if dataset == "propor2022":
         if data_augmentation_config["target"] == "majority":
@@ -184,6 +185,19 @@ def training_pipeline(
     log_path = os.path.join(os.getcwd(), "logs", dataset, mode)
     os.makedirs(log_path, exist_ok=True)
     logs = pd.DataFrame()
+    
+    feat_path = os.path.join(params["output_path"], params["dataset"])
+        
+    # reading training audio features
+    X_test = read_feature(
+        path=feat_path,
+        name="X_test.pth",
+    )
+    
+    y_test = read_feature(
+        path=feat_path,
+        name="y_test.pth",
+    )
         
     for fold, (training, validation) in enumerate(zip(training_data, validation_data)):
         X_train, y_train = training
@@ -273,6 +287,23 @@ def training_pipeline(
             generator=g
         )
         
+        # creating the test dataloader
+        test_dataloader = create_dataloader(
+            X=X_test,
+            y=y_test,
+            feature_config=feat_config,
+            wavelet_config=wavelet_config,
+            data_augmentation_config=None,
+            num_workers=0,
+            mode=params["mode"],
+            shuffle=False,
+            training=False,
+            batch_size=params["model"]["batch_size"],
+            data_augment_target=None,
+            worker_init_fn=seed_worker,
+            generator=g
+        )
+        
         if total_folds != 1:
             print(); print("#" * 20)
             print(f"TRAINING FOLD: {fold}")
@@ -302,10 +333,20 @@ def training_pipeline(
                 loss=loss
             )
 
+            report = test(
+                model=model,
+                dataloader=test_dataloader,
+                device=device
+            )
+            
+            test_f1 = report["macro avg"]["f1-score"]
+                        
             # saving the best model
             sbm(
                 current_valid_f1=valid_f1,
                 current_valid_loss=valid_loss,
+                current_test_f1=test_f1,
+                current_train_f1=train_f1,
                 epoch=epoch,
                 fold=fold,
                 model=model,
@@ -335,8 +376,9 @@ def training_pipeline(
         print(f"Best Loss: {sbm.best_valid_loss}")
         print("*" * 40); print();
         
-        best_valid_loss.append(sbm.best_valid_loss)
+        best_train_f1.append(sbm.best_train_f1)
         best_valid_f1.append(sbm.best_valid_f1)
+        best_test_f1.append(sbm.best_test_f1)
                 
         logs = logs.reset_index(drop=True)
         logs.to_csv(
@@ -348,8 +390,9 @@ def training_pipeline(
     
     # printing the best result
     print(); print("#" * 40);
-    print(f"Best F1-Score: {best_valid_f1}")
-    print(f"Best Loss: {best_valid_loss}")
+    print(f"Best Train F1-Score: {best_train_f1}")
+    print(f"Best Validation F1-Score: {best_valid_f1}")
+    print(f"Best Test F1-Score: {best_test_f1}")
     print("#" * 40); print();
 
 if __name__ == "__main__":

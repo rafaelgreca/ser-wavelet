@@ -38,6 +38,8 @@ class SaveBestModel:
         """
         self.best_valid_loss = float(np.Inf)
         self.best_valid_f1 = float(np.NINF)
+        self.best_test_f1 = float(np.NINF)
+        self.best_train_f1 = float(np.NINF)
         self.output_dir = output_dir
         self.model_name = model_name
         self.save_model = False
@@ -48,6 +50,8 @@ class SaveBestModel:
         self,
         current_valid_loss: float,
         current_valid_f1: float,
+        current_test_f1: float,
+        current_train_f1: float,
         epoch: int,
         model: nn.Module,
         optimizer: torch.optim,
@@ -59,6 +63,8 @@ class SaveBestModel:
         Args:
             current_valid_loss (float): the current validation loss value.
             current_valid_f1 (float): the current validation f1 score value.
+            current_test_f1 (float): the current test f1 score value.
+            current_train_f1 (float): the current train f1 score value.
             epoch (int): the current epoch.
             model (nn.Module): the trained model.
             optimizer (torch.optim): the optimizer objet.
@@ -67,14 +73,18 @@ class SaveBestModel:
         if current_valid_f1 > self.best_valid_f1:
             self.best_valid_loss = current_valid_loss
             self.best_valid_f1 = current_valid_f1
+            self.best_test_f1 = current_test_f1
+            self.best_train_f1 = current_train_f1
             self.best_epoch = epoch
             self.save_model = True
         
         if self.save_model:
             print("\nSaving model...")
             print(f"Epoch: {epoch}")
+            print(f"Train F1-Score: {current_train_f1:1.6f}")
             print(f"Validation F1-Score: {current_valid_f1:1.6f}")
-            print(f"Validation Loss: {current_valid_loss:1.6f}\n")
+            print(f"Validation Loss: {current_valid_loss:1.6f}")
+            print(f"Test F1-Score: {current_test_f1:1.6f}\n")
             
             if not fold is None:
                 path = os.path.join(self.output_dir, f"{self.model_name}_fold{fold}.pth")
@@ -86,6 +96,6 @@ class SaveBestModel:
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict()
                 },
-                path,
+                path
             )
             self.save_model = False

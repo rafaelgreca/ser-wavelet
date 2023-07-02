@@ -46,7 +46,12 @@ def test(
             target = target.detach().cpu().numpy()
             targets.extend(target.tolist())
     
-    class_report = classification_report(targets, predictions, digits=4)
+    class_report = classification_report(
+        targets,
+        predictions,
+        digits=4,
+        output_dict=True
+    )
     return class_report
 
 if __name__ == "__main__":
