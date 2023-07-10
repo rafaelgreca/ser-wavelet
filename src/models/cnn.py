@@ -3,7 +3,10 @@ import torch.nn as nn
 from src.models.utils import weight_init
 
 class CNN_Mode2(nn.Module):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        num_classes: int
+    ) -> None:
         super().__init__()
         self.input_channels = 5
         self.linear_input_features = 119040
@@ -32,7 +35,7 @@ class CNN_Mode2(nn.Module):
             nn.Flatten(),
             nn.Linear(
                 in_features=self.linear_input_features,
-                out_features=3
+                out_features=num_classes
             )
         )
 
@@ -45,7 +48,10 @@ class CNN_Mode2(nn.Module):
         return self.model(X)
 
 class CNN_Mode1(nn.Module):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        num_classes: int
+    ) -> None:
         super().__init__()
         self.input_channels = 1
         self.linear_input_features = 343040
@@ -84,7 +90,7 @@ class CNN_Mode1(nn.Module):
             nn.Flatten(),
             nn.Linear(
                 in_features=self.linear_input_features,
-                out_features=3
+                out_features=num_classes
             )
         )
         

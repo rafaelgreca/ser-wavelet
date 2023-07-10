@@ -209,6 +209,7 @@ def training_pipeline(
         model = choose_model(
             mode=mode,
             model_name=model_config["name"],
+            dataset=dataset,
             device=device
         )
         

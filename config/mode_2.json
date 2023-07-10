@@ -1,6 +1,6 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
-    "output_path": "./features",
+    "output_path": "./features8k",
     "sample_rate": 8000,
     "dataset": "propor2022",
     "mode": "mode_2",
@@ -11,18 +11,22 @@
         "mode": "symmetric"
     },
     "feature": {
-        "name": "mfcc",
-        "n_fft": 512,
-        "hop_length": 256,
-        "n_mfcc": 64
+        "name": "mel_spectrogram",
+        "n_fft": 400,
+        "hop_length": 200,
+        "n_mels": 128,
+        "f_min": 0,
+        "f_max": 4000
     },
     "data_augmentation": {
         "mode": "feature",
         "target": "all",
         "p": 1,
         "techniques": {
-            "cutmix": {
-                "alpha": 1.0
+            "specaugment": {
+                "transformations": ["frequency_mask", "time_mask"],
+                "freq_mask_samples": 10,
+                "time_mask_samples": 5
             }
         }
     },
@@ -30,7 +34,7 @@
         "name": "cnn2",
         "use_gpu": true,
         "output_path": "./checkpoints",
-        "batch_size": 16,
+        "batch_size": 32,
         "learning_rate": 0.001,
         "epochs": 100,
         "use_lr_scheduler": false

@@ -219,26 +219,30 @@ class SpecAugment:
         self,
         p: float,
         transformations: list,
-        mask_samples: int,
+        time_mask_samples: int,
+        freq_mask_samples: int,
         feature: str
     ) -> None:
         """
         Args:
             p (float): the probability of the denoiser filter being applied to the audio. Default is 1.
             transformations (list): a list containing the transformations that will be applied ("time_mask" or "frequency_mask").
-            mask_samples (int): maximum possible length of the mask. Indices uniformly sampled from [0, mask_samples).
+            freq_mask_samples (int): maximum possible length of the mask in the frequency axis. Indices uniformly sampled from [0, freq_mask_samples).
+            time_mask_samples (int): maximum possible length of the mask in the frequency axis. Indices uniformly sampled from [0, time_mask_samples).
         """
         _valid_transformations = ["time_mask", "frequency_mask"]
         _valid_features = ["mel_spectrogram", "mfcc"]
         
         assert 0 <= p <= 1.0
         assert all([t in _valid_transformations for t in transformations])
-        assert mask_samples > 0
+        assert time_mask_samples > 0
+        assert freq_mask_samples > 0
         assert feature in _valid_features
         
         self.p = p
         self.transformations = transformations
-        self.mask_samples = mask_samples
+        self.time_mask_samples = time_mask_samples
+        self.freq_mask_samples = freq_mask_samples
         self.feature = feature
     
     def __call__(
@@ -279,9 +283,9 @@ class SpecAugment:
         """
         for transformation in self.transformations:
             if transformation == "time_mask":
-                masking = T.TimeMasking(time_mask_param=self.mask_samples)
+                masking = T.TimeMasking(time_mask_param=self.time_mask_samples)
             elif transformation == "frequency_mask":
-                masking = T.FrequencyMasking(freq_mask_param=self.mask_samples)
+                masking = T.FrequencyMasking(freq_mask_param=self.freq_mask_samples)
             spec = masking(spec)
 
         return spec

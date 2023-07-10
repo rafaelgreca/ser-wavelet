@@ -44,10 +44,20 @@ def _apply_augmentation_feature(
     
     for transformation in transformations.keys():
         if transformation == "specaugment":
+            time_mask_samples = 0
+            freq_mask_samples = 0 
+            
+            if "time_mask_samples" in transformations[transformation].keys():
+                time_mask_samples = int(transformations[transformation]["time_mask_samples"])
+            
+            if "freq_mask_samples" in transformations[transformation].keys():
+                freq_mask_samples = int(transformations[transformation]["freq_mask_samples"])
+                
             augment = SpecAugment(
                 transformations=transformations[transformation]["transformations"],
                 p=p,
-                mask_samples=transformations[transformation]["mask_samples"],
+                time_mask_samples=time_mask_samples,
+                freq_mask_samples=freq_mask_samples,
                 feature=feature_config["name"]
             )
             audio = augment(audio)

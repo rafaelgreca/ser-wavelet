@@ -50,7 +50,8 @@ def test(
         targets,
         predictions,
         digits=4,
-        output_dict=True
+        output_dict=True,
+        zero_division=0.0
     )
     return class_report
 

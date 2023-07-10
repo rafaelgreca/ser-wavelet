@@ -9,7 +9,7 @@ from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.cnn import CNN_Mode1, CNN_Mode2
 from src.models.cnn2 import CNN2_Mode1, CNN2_Mode2
-from src.models.cnn3 import Transfer_CNN10, CNN3_Mode2
+from src.models.cnn3 import Transfer_CNN10, Transfer_CNN6
 from typing import Optional, Union, Tuple, List
 
 def pad_features(
@@ -37,6 +37,7 @@ def pad_features(
 def choose_model(
     mode: str,
     model_name: str,
+    dataset: str,
     device: torch.device
 ) -> nn.Module:
     """
@@ -45,6 +46,7 @@ def choose_model(
     Args:
         mode (str): which mode is running.
         model_name (str): the model name.
+        dataset (str): the dataset name.
         device (torch.device): the device where the model will be ran.
 
     Raises:
@@ -53,20 +55,43 @@ def choose_model(
     Returns:
         nn.Module: the created model.
     """
+    if dataset == "propor2022":
+        num_classes = 3
+    else:
+        raise ValueError("Invalid dataset")
+    
     if mode == "mode_1":
         if model_name == "cnn":
-            model = CNN_Mode1().to(device)
+            model = CNN_Mode1(
+                num_classes=num_classes
+            ).to(device)
         elif model_name == "cnn2":
-            model = CNN2_Mode1().to(device)
+            model = CNN2_Mode1(
+                num_classes=num_classes
+            ).to(device)
         elif model_name == "cnn3":
-            model = Transfer_CNN10(load_pretrained=False, freeze_base=False).to(device)
+            model = Transfer_CNN6(
+                input_channels=1,
+                num_classes=num_classes,
+                load_pretrained=False,
+                freeze_base=False
+            ).to(device)
     elif mode == "mode_2":
         if model_name == "cnn":
-            model = CNN_Mode2().to(device)
+            model = CNN_Mode2(
+                num_classes=num_classes
+            ).to(device)
         elif model_name == "cnn2":
-            model = CNN2_Mode2().to(device)
+            model = CNN2_Mode2(
+                num_classes=num_classes
+            ).to(device)
         elif model_name == "cnn3":
-            model = CNN3_Mode2().to(device)
+            model = Transfer_CNN6(
+                input_channels=5,
+                num_classes=num_classes,
+                load_pretrained=False,
+                freeze_base=False
+            ).to(device)
     else:
         raise ValueError("Unknown mode")
     

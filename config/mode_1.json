@@ -25,7 +25,8 @@
         "techniques": {
             "specaugment": {
                 "transformations": ["frequency_mask", "time_mask"],
-                "mask_samples": 10
+                "freq_mask_samples": 10,
+                "time_mask_samples": 5
             }
         }
     },
