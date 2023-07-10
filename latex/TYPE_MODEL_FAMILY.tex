@@ -1,0 +1,42 @@
+\documentclass{standalone}
+\usepackage{bubbleplot}
+
+\definecolor{2018}{rgb}{0.7680578755197892, 0.8841756194023903, 0.8990850578218313}
+\definecolor{2019}{rgb}{0.5877920951685516, 0.7528144015319728, 0.8118702834478388}
+\definecolor{2020}{rgb}{0.442991949625243, 0.6052475761500462, 0.7148523230237727}
+\definecolor{2021}{rgb}{0.32863832963720324, 0.45269364455759714, 0.5971981465158609}
+\definecolor{2022}{rgb}{0.22637053188040007, 0.2943356506164014, 0.44206285313479265}
+
+\pgfplotsset{
+  colormap={yearcolor}{
+    color=(2018),
+    color=(2019),
+    color=(2020),
+    color=(2021),
+    color=(2022),
+  }
+}
+
+\begin{document}
+\bubbleplot[%
+    %% width=,
+    %% height=,
+    xmin=-5,
+    xmax=6,
+    ylabel=MODEL,
+    meta=nbr,
+    x field=x,
+    %% enlarge y limits=,
+    x index field=ix,
+    y field=y,
+    y index field=iy,
+    year field=years,
+    %% year x shift=,
+    %% year y shift=,
+    %% year padding=,
+    x left label=TYPE,
+    %% x left label shift=,
+    x right label=FAMILY,
+    %% x right label shift=,
+]{TYPE_MODEL_FAMILY.csv}{2018, 2019, 2020, 2021, 2022}
+\end{document}
