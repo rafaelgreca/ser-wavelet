@@ -1,11 +1,10 @@
-import numpy as np
 import torch
 from copy import deepcopy
 from src.data_augmentation import AudioAugment, SpecAugment, Denoiser
 from src.features import extract_melspectrogram, extract_mfcc, extract_wavelet_from_spectrogram, extract_wavelet_from_raw_audio
 from src.utils import pad_features
 from torch.utils.data import Dataset, DataLoader
-from typing import Dict, Union, Iterable
+from typing import Dict, Union
 
 def _apply_augmentation_raw_audio(
     audio: torch.Tensor,
@@ -268,8 +267,6 @@ def create_dataloader(
     data_augmentation_config: Union[Dict, None],
     data_augment_target: Union[str, None],
     mode: str,
-    worker_init_fn: Iterable,
-    generator: torch.Generator,
     num_workers: int = 0,
     shuffle: bool = True,
     training: bool = True
@@ -303,9 +300,7 @@ def create_dataloader(
         batch_size=batch_size,
         num_workers=num_workers,
         shuffle=shuffle,
-        drop_last=False,
-        worker_init_fn=worker_init_fn,
-        generator=generator
+        drop_last=False
     )
     
     return dataloader

@@ -43,11 +43,10 @@ class FLB(nn.Module):
             nn.Conv2d(
                 in_channels=input_channels,
                 out_channels=output_channels,
-                kernel_size=kernel_size,
-                padding="valid"
+                kernel_size=kernel_size
             ),
             nn.BatchNorm2d(output_channels),
-            nn.LeakyReLU()
+            nn.ReLU()
         )
     
     def forward(
@@ -57,18 +56,22 @@ class FLB(nn.Module):
         X = self.block(X)
         return X
 
-class CNN2_Mode2(nn.Module):
+class CNN2(nn.Module):
     def __init__(
         self,
+        input_channels: int,
         num_classes: int
     ) -> None:
         super().__init__()
-        self.in_channels = 5
-        self.linear_input_features = 1103872
         
+        if input_channels == 1:
+            linear_input_features = 1406464
+        elif input_channels == 4:
+            linear_input_features = 1103872
+            
         self.cnn = nn.Sequential(
             FLB(
-                input_channels=self.in_channels,
+                input_channels=input_channels,
                 output_channels=64,
                 kernel_size=(2, 2)
             ),
@@ -96,7 +99,7 @@ class CNN2_Mode2(nn.Module):
             ),
             nn.Flatten(),
             nn.Linear(
-                in_features=self.linear_input_features,
+                in_features=linear_input_features,
                 out_features=128
             )
         )
@@ -116,55 +119,6 @@ class CNN2_Mode2(nn.Module):
             self.cnn,
             self.lstm,
             Attention_Layer(256),
-            nn.Linear(
-                in_features=256,
-                out_features=num_classes
-            )
-        )
-        self.model.apply(weight_init)
-    
-    def forward(
-        self,
-        X: torch.Tensor
-    ) -> torch.Tensor:
-        return self.model(X)
-    
-class CNN2_Mode1(nn.Module):
-    def __init__(
-        self,
-        num_classes: int
-    ) -> None:
-        super().__init__()
-        self.in_channels = 1
-        self.linear_input_features = 1406464
-        
-        self.cnn = nn.Sequential(
-            FLB(
-                input_channels=self.in_channels,
-                output_channels=64,
-                kernel_size=(2, 2)
-            ),
-            nn.MaxPool2d(kernel_size=(2, 2)),
-            FLB(
-                input_channels=64,
-                output_channels=128,
-                kernel_size=(2, 2)
-            ),
-            FLB(
-                input_channels=128,
-                output_channels=256,
-                kernel_size=(2, 2)
-            ),
-            nn.MaxPool2d(kernel_size=(2, 2)),
-            nn.Flatten(),
-            nn.Linear(
-                in_features=self.linear_input_features,
-                out_features=256
-            )
-        )
-        
-        self.model = nn.Sequential(
-            self.cnn,
             nn.Linear(
                 in_features=256,
                 out_features=num_classes

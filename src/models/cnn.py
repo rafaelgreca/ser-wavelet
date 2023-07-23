@@ -8,7 +8,7 @@ class CNN_Mode2(nn.Module):
         num_classes: int
     ) -> None:
         super().__init__()
-        self.input_channels = 5
+        self.input_channels = 4
         self.linear_input_features = 119040
         
         self.model = nn.Sequential(

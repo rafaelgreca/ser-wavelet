@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.cnn import CNN_Mode1, CNN_Mode2
-from src.models.cnn2 import CNN2_Mode1, CNN2_Mode2
+from src.models.cnn2 import CNN2
 from src.models.cnn3 import Transfer_CNN10, Transfer_CNN6
 from typing import Optional, Union, Tuple, List
 
@@ -66,7 +66,8 @@ def choose_model(
                 num_classes=num_classes
             ).to(device)
         elif model_name == "cnn2":
-            model = CNN2_Mode1(
+            model = CNN2(
+                input_channels=1,
                 num_classes=num_classes
             ).to(device)
         elif model_name == "cnn3":
@@ -82,12 +83,13 @@ def choose_model(
                 num_classes=num_classes
             ).to(device)
         elif model_name == "cnn2":
-            model = CNN2_Mode2(
+            model = CNN2(
+                input_channels=4,
                 num_classes=num_classes
             ).to(device)
         elif model_name == "cnn3":
             model = Transfer_CNN6(
-                input_channels=5,
+                input_channels=4,
                 num_classes=num_classes,
                 load_pretrained=False,
                 freeze_base=False

@@ -1,7 +1,5 @@
 import json
 import os
-import random
-import numpy as np
 import torch
 import torch.nn as nn
 import pandas as pd
@@ -15,23 +13,6 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
 from typing import Dict, Tuple, List, Union
 from sklearn.metrics import classification_report
-
-# making sure the experiments are reproducible
-seed = 2109
-random.seed(seed)
-np.random.seed(seed)
-torch.cuda.manual_seed(seed)
-os.environ["PYTHONHASHSEED"] = str(seed)
-torch.backends.cudnn.benchmark = False
-torch.backends.cudnn.deterministic = True
-
-def seed_worker(worker_id: int):
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
-    random.seed(worker_seed)
-
-g = torch.Generator()
-g.manual_seed(seed)
 
 def train(
     model: nn.Module,
@@ -263,12 +244,10 @@ def training_pipeline(
             data_augmentation_config=data_augmentation_config,
             num_workers=0,
             mode=mode,
-            shuffle=False,
+            shuffle=True,
             training=True,
             batch_size=model_config["batch_size"],
-            data_augment_target=data_augment_target,
-            worker_init_fn=seed_worker,
-            generator=g
+            data_augment_target=data_augment_target
         )
         
         # creating the validation dataloader
@@ -277,15 +256,13 @@ def training_pipeline(
             y=y_valid,
             feature_config=feature_config,
             wavelet_config=wavelet_config,
-            data_augmentation_config=data_augmentation_config,
+            data_augmentation_config=None,
             num_workers=0,
             mode=mode,
-            shuffle=False,
+            shuffle=True,
             training=False,
             batch_size=model_config["batch_size"],
-            data_augment_target=data_augment_target,
-            worker_init_fn=seed_worker,
-            generator=g
+            data_augment_target=None
         )
         
         # creating the test dataloader
@@ -300,9 +277,7 @@ def training_pipeline(
             shuffle=False,
             training=False,
             batch_size=params["model"]["batch_size"],
-            data_augment_target=None,
-            worker_init_fn=seed_worker,
-            generator=g
+            data_augment_target=None
         )
         
         if total_folds != 1:
