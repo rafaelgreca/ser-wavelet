@@ -215,6 +215,116 @@ def prepare_propor_test_dataframe(
     df["file"] = df["file"].apply(lambda x: os.path.join(path, "test_ser", x))    
     return df.reset_index(drop=True)
 
+def create_ravdess_train_dataframe(
+    path: str = "/media/greca/HD/Datasets/RAVDESS/"
+) -> pd.DataFrame:
+    """
+    Creates a RAVDESS's pandas DataFrame containing all the training files.
+    
+    Args:
+        path (str): the path to the CSV file.
+    
+    Returns:
+        df (pd.DataFrame): the pandas DataFrame.
+    """
+    df = pd.DataFrame()
+    actors = [f"Actor_0{i}" if i < 10 else f"Actor_{i}" for i in range(1, 25)]
+
+    for actor in actors:
+        wav_files = [
+            file
+            for file in os.listdir(os.path.join(path, actor))
+            if file.endswith(".wav")
+        ]
+
+        for wav in wav_files:
+            wav_file = os.path.basename(wav)
+            label = wav_file.split("-")[2]
+            
+            if label == "01":
+                label = "neutral"
+            elif label == "02":
+                label = "calm"
+            elif label == "03":
+                label = "happy"
+            elif label == "04":
+                label = "sad"
+            elif label == "05":
+                label = "angry"
+            elif label == "06":
+                label = "fearful"
+            elif label == "07":
+                label = "disgust"
+            elif label == "08":
+                label = "surprised"
+            
+            row = pd.DataFrame({
+                "file": [os.path.join(path, actor, wav)],
+                "label": [label],
+                "wav_file": [wav]
+            })
+
+            df = pd.concat(
+                [df, row],
+                axis=0
+            )
+    
+    return df.reset_index(drop=True)
+
+def create_emodb_train_dataframe(
+    path: str = "/media/greca/HD/Datasets/EmoDB/"
+) -> pd.DataFrame:
+    """
+    Creates a EmoDB's pandas DataFrame containing all the training files.
+    
+    Args:
+        path (str): the path to the CSV file.
+    
+    Returns:
+        df (pd.DataFrame): the pandas DataFrame.
+    """
+    wav_files = [
+        file
+        for file in os.listdir(os.path.join(path, "wav"))
+        if file.endswith(".wav")
+    ]
+    df = pd.DataFrame()
+    
+    for wav in wav_files:
+        wav_file = os.path.basename(wav)
+        speaker_file = wav_file[:2]
+        text_code = wav_file[2:5]
+        label = wav_file[5].lower()
+        version = wav_file[6]
+        
+        if label == "w":
+            label = "anger"
+        elif label == "l":
+            label = "boredom"
+        elif label == "e":
+            label = "disgust"
+        elif label == "a":
+            label = "anxiety/fear"
+        elif label == "f":
+            label = "happiness"
+        elif label == "t":
+            label = "sadness"
+        elif label == "n":
+            label = "neutral"
+        
+        row = pd.DataFrame({
+            "file": [os.path.join(path, "wav", wav)],
+            "label": [label],
+            "wav_file": [wav]
+        })
+        
+        df = pd.concat(
+            [df, row],
+            axis=0
+        )
+    
+    return df.reset_index(drop=True)
+
 def create_propor_train_dataframe(
     path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
 ) -> pd.DataFrame:
