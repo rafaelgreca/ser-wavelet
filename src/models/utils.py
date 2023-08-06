@@ -29,33 +29,40 @@ class SaveBestModel:
     def __init__(
         self,
         output_dir: str,
-        model_name: str
+        model_name: str,
+        dataset: str
     ) -> None:
         """
         Args:
             output_dir (str): the output folder directory.
             model_name (str): the model's name.
+            dataset (str): which dataset is being used (coraa, emodb or ravdess).
         """
         self.best_valid_loss = float(np.Inf)
         self.best_valid_f1 = float(np.NINF)
         self.best_test_f1 = float(np.NINF)
         self.best_train_f1 = float(np.NINF)
+        self.best_train_acc = float(np.NINF)
+        self.best_valid_acc = float(np.NINF)
         self.output_dir = output_dir
         self.model_name = model_name
         self.save_model = False
         self.best_epoch = -1
+        self.dataset = dataset
         os.makedirs(self.output_dir, exist_ok=True)
 
     def __call__(
         self,
         current_valid_loss: float,
-        current_valid_f1: float,
-        current_test_f1: float,
-        current_train_f1: float,
         epoch: int,
         model: nn.Module,
         optimizer: torch.optim,
-        fold: Union[int, None]
+        fold: Union[int, None],
+        current_valid_f1: Union[float, None] = None,
+        current_test_f1: Union[float, None] = None,
+        current_valid_acc: Union[float, None] = None,
+        current_train_acc: Union[float, None] = None,
+        current_train_f1: Union[float, None] = None
     ) -> None:
         """
         Saves the best trained model.
@@ -70,21 +77,24 @@ class SaveBestModel:
             optimizer (torch.optim): the optimizer objet.
             fold (Union[int, None]): the current fold.
         """
-        if current_valid_f1 > self.best_valid_f1:
-            self.best_valid_loss = current_valid_loss
-            self.best_valid_f1 = current_valid_f1
-            self.best_test_f1 = current_test_f1
-            self.best_train_f1 = current_train_f1
-            self.best_epoch = epoch
-            self.save_model = True
+        if self.dataset == "propor2022":
+            if current_valid_f1 > self.best_valid_f1:
+                self.best_valid_loss = current_valid_loss
+                self.best_valid_f1 = current_valid_f1
+                self.best_test_f1 = current_test_f1
+                self.best_train_f1 = current_train_f1
+                self.best_epoch = epoch
+                self.save_model = True
+        else:
+            if current_valid_acc > self.best_valid_acc:
+                self.best_valid_loss = current_valid_loss
+                self.best_valid_acc = current_valid_acc
+                self.best_train_acc = current_train_acc
+                self.best_epoch = epoch
+                self.save_model = True
         
         if self.save_model:
-            print("\nSaving model...")
-            print(f"Epoch: {epoch}")
-            print(f"Train F1-Score: {current_train_f1:1.6f}")
-            print(f"Validation F1-Score: {current_valid_f1:1.6f}")
-            print(f"Validation Loss: {current_valid_loss:1.6f}")
-            print(f"Test F1-Score: {current_test_f1:1.6f}\n")
+            self.print_summary()
             
             if not fold is None:
                 path = os.path.join(self.output_dir, f"{self.model_name}_fold{fold}.pth")
@@ -99,3 +109,21 @@ class SaveBestModel:
                 path
             )
             self.save_model = False
+        
+    def print_summary(self) -> None:
+        """
+        Print the best model's metric summary.
+        """
+        if self.dataset == "propor2022":
+            print("\nSaving model...")
+            print(f"Epoch: {self.best_epoch}")
+            print(f"Train F1-Score: {self.best_train_f1:1.6f}")
+            print(f"Validation F1-Score: {self.best_valid_f1:1.6f}")
+            print(f"Validation Loss: {self.best_valid_loss:1.6f}")
+            print(f"Test F1-Score: {self.best_test_f1:1.6f}\n")
+        else:
+            print("\nSaving model...")
+            print(f"Epoch: {self.best_epoch}")
+            print(f"Train Unweighted Accuracy: {self.best_train_acc:1.6f}")
+            print(f"Validation Unweighted Accuracy: {self.best_valid_acc:1.6f}")
+            print(f"Validation Loss: {self.best_valid_loss:1.6f}\n")

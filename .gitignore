@@ -1,9 +1,7 @@
 latex/
 experiments/
-features/
-features32k/
-features16k/
-features8k/
+features_coraa/
+features_emodb/
 pretrained/
 checkpoints/
 logs/

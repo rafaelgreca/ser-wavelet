@@ -57,6 +57,10 @@ def choose_model(
     """
     if dataset == "propor2022":
         num_classes = 3
+    elif dataset == "emodb":
+        num_classes = 7
+    elif dataset == "ravdess":
+        num_classes = 8
     else:
         raise ValueError("Invalid dataset")
     
@@ -157,15 +161,26 @@ def labels_mapping(
             "non-neutral-male": 1,
             "non-neutral-female": 2
         })
-    elif dataset == "tess":
+    elif dataset == "emodb":
         df["label"] = df["label"].replace({
-            "angry": 0,
-            "disgust": 1,
-            "fear": 2,
-            "happy": 3,
-            "neutral": 4,
-            "surprised": 5,
-            "sad": 6
+            "neutral": 0,
+            "anger": 1,
+            "boredom": 2,
+            "disgust": 3,
+            "anxiety/fear": 4,
+            "happiness": 5,
+            "sadness": 6
+        })
+    elif dataset == "ravdess":
+        df["label"] = df["label"].replace({
+            "neutral": 0,
+            "angry": 1,
+            "calm": 2,
+            "disgust": 3,
+            "fearful": 4,
+            "happy": 5,
+            "sad": 6,
+            "surprised": 7
         })
     
     return df
@@ -419,14 +434,24 @@ def feature_extraction_pipeline(
     apply_one_hot_encoder: bool = True
 ) -> None:
     # reading the training dataset
-    train_df = create_propor_train_dataframe(
-        path=input_path
-    )
+    if dataset == "propor2022":
+        train_df = create_propor_train_dataframe(
+            path=input_path
+        )
+    elif dataset == "emodb":
+        train_df = create_emodb_train_dataframe(
+            path=input_path
+        )
+    elif dataset == "ravdess":
+        train_df = create_ravdess_train_dataframe(
+            path=input_path
+        )
+        
     train_df = labels_mapping(
         df=train_df,
         dataset=dataset
     )
-    
+        
     # preprocessing the training dataset
     X_train, y_train = processing(
         df=train_df,
@@ -445,32 +470,33 @@ def feature_extraction_pipeline(
         apply_one_hot_encoder=apply_one_hot_encoder
     )
     
-    # reading the test dataset
-    test_df = prepare_propor_test_dataframe(
-        path=input_path
-    )
-    test_df = labels_mapping(
-        df=test_df,
-        dataset=dataset
-    )
-        
-    # preprocessing the test dataset
-    X_test, y_test = processing(
-        df=test_df,
-        to_mono=to_mono,
-        sample_rate=sample_rate,
-        max_samples=max_samples
-    )
-    
-    if apply_one_hot_encoder:
-        num_classes = 3
-        y_test = one_hot_encoder(labels=y_test, num_classes=num_classes)
-        
-    # saving the test features
-    folder_path = os.path.join(output_path, dataset)
-        
-    save(path=folder_path, name="X_test", tensor=X_test)
-    save(path=folder_path, name="y_test", tensor=y_test)
+    # reading the test dataset (only for CORAA)
+    if dataset == "propor2022":
+        test_df = prepare_propor_test_dataframe(
+            path=input_path
+        )
+        test_df = labels_mapping(
+            df=test_df,
+            dataset=dataset
+        )
+            
+        # preprocessing the test dataset
+        X_test, y_test = processing(
+            df=test_df,
+            to_mono=to_mono,
+            sample_rate=sample_rate,
+            max_samples=max_samples
+        )
+
+        if apply_one_hot_encoder:
+            num_classes = 3
+            y_test = one_hot_encoder(labels=y_test, num_classes=num_classes)
+            
+        # saving the test features
+        folder_path = os.path.join(output_path, dataset)
+            
+        save(path=folder_path, name="X_test", tensor=X_test)
+        save(path=folder_path, name="y_test", tensor=y_test)
 
 def read_features_files(
     k_fold: Union[int, None],

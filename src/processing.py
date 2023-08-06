@@ -52,7 +52,13 @@ def split_data(
     apply_one_hot_encoder: bool = True
 ) -> None:
     skf = None
-    
+    if dataset == "propor2022":
+        num_classes = 3
+    elif dataset == "emodb":
+        num_classes = 7
+    elif dataset == "ravdess":
+        num_classes = 8
+        
     if not k_fold is None:
         skf = StratifiedKFold(
             n_splits=k_fold,
@@ -67,8 +73,7 @@ def split_data(
             X_valid = X[test_index, :, :]
             y_valid = y[test_index]
             
-            if apply_one_hot_encoder:
-                num_classes = 3
+            if apply_one_hot_encoder:                
                 y_train = one_hot_encoder(labels=y_train, num_classes=num_classes)
                 y_valid = one_hot_encoder(labels=y_valid, num_classes=num_classes)
             
@@ -91,7 +96,6 @@ def split_data(
         )
         
         if apply_one_hot_encoder:
-            num_classes = 3
             y_train = one_hot_encoder(labels=y_train, num_classes=num_classes)
             y_valid = one_hot_encoder(labels=y_valid, num_classes=num_classes)
             

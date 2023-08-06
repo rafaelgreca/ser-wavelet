@@ -12,7 +12,7 @@ from src.models.utils import SaveBestModel
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import StepLR
 from typing import Dict, Tuple, List, Union
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score
 
 def train(
     model: nn.Module,
@@ -20,7 +20,8 @@ def train(
     optimizer: torch.optim.Adam,
     loss: torch.nn.CrossEntropyLoss,
     device: torch.device,
-    mixer: Union[None, Mixup, Specmix, Cutmix]
+    mixer: Union[None, Mixup, Specmix, Cutmix],
+    dataset: str
 ) -> Tuple[float, float]:
     """
     Function responsible for the model training.
@@ -31,6 +32,7 @@ def train(
         optimizer (torch.optim.Adam): the optimizer used.
         loss (torch.nn.CrossEntropyLoss): the loss function used.
         device (torch.device): which device to use.
+        dataset (str): which dataset is being used (coraa, emodb or ravdess).
 
     Returns:
         Tuple[float, float]: the training f1 and loss, respectively.
@@ -71,21 +73,30 @@ def train(
         targets.extend(target.tolist())
         
     train_loss = train_loss/index
-    train_f1 = classification_report(
-        targets,
-        predictions,
-        digits=6,
-        output_dict=True,
-        zero_division=0.0
-    )
-    train_f1 = train_f1["macro avg"]["f1-score"]
+    
+    if dataset == "propor2022":
+        train_f1 = classification_report(
+            targets,
+            predictions,
+            digits=6,
+            output_dict=True,
+            zero_division=0.0
+        )
+        train_f1 = train_f1["macro avg"]["f1-score"]
+    else:
+        train_f1 = accuracy_score(
+            y_true=targets, 
+            y_pred=predictions
+        )
+    
     return train_f1, train_loss
 
 def evaluate(
     model: nn.Module,
     dataloader: DataLoader,
     loss: torch.nn.CrossEntropyLoss,
-    device: torch.device
+    device: torch.device,
+    dataset: str
 ) -> Tuple[float, float]:
     """
     Function responsible for the model evaluation.
@@ -95,6 +106,7 @@ def evaluate(
         dataloader (DataLoader): the validaiton dataloader.
         loss (torch.nn.CrossEntropyLoss): the loss function used.
         device (torch.device): which device to use.
+        dataset (str): which dataset is being used (coraa, emodb or ravdess).
 
     Returns:
         Tuple[float, float]: the validation f1 and loss, respectively.
@@ -127,14 +139,22 @@ def evaluate(
             targets.extend(target.tolist())
     
     validation_loss = validation_loss/index
-    validation_f1 = classification_report(
-        targets,
-        predictions,
-        digits=6,
-        output_dict=True,
-        zero_division=0.0
-    )
-    validation_f1 = validation_f1["macro avg"]["f1-score"]
+    
+    if dataset == "propor2022":
+        validation_f1 = classification_report(
+            targets,
+            predictions,
+            digits=6,
+            output_dict=True,
+            zero_division=0.0
+        )
+        validation_f1 = validation_f1["macro avg"]["f1-score"]
+    else:
+        validation_f1 = accuracy_score(
+            y_true=targets, 
+            y_pred=predictions
+        )
+        
     return validation_f1, validation_loss
 
 def training_pipeline(
@@ -158,7 +178,17 @@ def training_pipeline(
         elif data_augmentation_config["target"] == "all":
             data_augment_target = [0, 1, 2]
         else:
-            raise ValueError("Invalid arguments for target. Should be 'all', 'majority' or 'minority")
+            raise ValueError("Invalid arguments for target. Should be 'all', 'majority' or 'minority'")
+    elif dataset == "emodb":
+        if data_augmentation_config["target"] == "all":
+            data_augment_target = [0, 1, 2, 3, 4, 5, 6]
+        else:
+            raise ValueError("Invalid arguments for target. Should be 'all'")
+    elif dataset == "ravdess":
+        if data_augmentation_config["target"] == "all":
+            data_augment_target = [0, 1, 2, 3, 4, 5, 6, 7]
+        else:
+            raise ValueError("Invalid arguments for target. Should be 'all'")
     else:
         raise NotImplementedError
     
@@ -169,16 +199,17 @@ def training_pipeline(
     
     feat_path = os.path.join(params["output_path"], params["dataset"])
         
-    # reading training audio features
-    X_test = read_feature(
-        path=feat_path,
-        name="X_test.pth",
-    )
-    
-    y_test = read_feature(
-        path=feat_path,
-        name="y_test.pth",
-    )
+    # reading training audio features (CORAA only)
+    if dataset == "propor2022":
+        X_test = read_feature(
+            path=feat_path,
+            name="X_test.pth",
+        )
+        
+        y_test = read_feature(
+            path=feat_path,
+            name="y_test.pth",
+        )
         
     for fold, (training, validation) in enumerate(zip(training_data, validation_data)):
         X_train, y_train = training
@@ -232,7 +263,8 @@ def training_pipeline(
         # creating the model checkpoint object
         sbm = SaveBestModel(
             output_dir=os.path.join(model_config["output_path"], dataset, mode, model_config["name"]),
-            model_name=model_config["name"]
+            model_name=model_config["name"],
+            dataset=dataset
         )
         
         # creating the training dataloader
@@ -265,20 +297,21 @@ def training_pipeline(
             data_augment_target=None
         )
         
-        # creating the test dataloader
-        test_dataloader = create_dataloader(
-            X=X_test,
-            y=y_test,
-            feature_config=feat_config,
-            wavelet_config=wavelet_config,
-            data_augmentation_config=None,
-            num_workers=0,
-            mode=params["mode"],
-            shuffle=False,
-            training=False,
-            batch_size=params["model"]["batch_size"],
-            data_augment_target=None
-        )
+        # creating the test dataloader (CORAA only)
+        if dataset == "propor2022":
+            test_dataloader = create_dataloader(
+                X=X_test,
+                y=y_test,
+                feature_config=feat_config,
+                wavelet_config=wavelet_config,
+                data_augmentation_config=None,
+                num_workers=0,
+                mode=params["mode"],
+                shuffle=False,
+                training=False,
+                batch_size=params["model"]["batch_size"],
+                data_augment_target=None
+            )
         
         if total_folds != 1:
             print(); print("#" * 20)
@@ -299,33 +332,50 @@ def training_pipeline(
                 optimizer=optimizer,
                 model=model,
                 loss=loss,
-                mixer=mixer
+                mixer=mixer,
+                dataset=dataset
             )
             
             valid_f1, valid_loss = evaluate(
                 device=device,
                 dataloader=validation_dataloader,
                 model=model,
-                loss=loss
+                loss=loss,
+                dataset=dataset
             )
 
-            test_f1 = test(
-                model=model,
-                dataloader=test_dataloader,
-                device=device
-            )["f1-score macro"]
+            if dataset == "propor2022":
+                test_f1 = test(
+                    model=model,
+                    dataloader=test_dataloader,
+                    device=device
+                )["f1-score macro"]
                                     
-            # saving the best model
-            sbm(
-                current_valid_f1=valid_f1,
-                current_valid_loss=valid_loss,
-                current_test_f1=test_f1,
-                current_train_f1=train_f1,
-                epoch=epoch,
-                fold=fold,
-                model=model,
-                optimizer=optimizer
-            )
+                # saving the best model
+                sbm(
+                    current_valid_f1=valid_f1,
+                    current_valid_loss=valid_loss,
+                    current_test_f1=test_f1,
+                    current_train_f1=train_f1,
+                    epoch=epoch,
+                    fold=fold,
+                    model=model,
+                    optimizer=optimizer
+                )
+            else:
+                valid_acc = valid_f1
+                train_acc = train_f1
+                
+                # saving the best model
+                sbm(
+                    current_valid_acc=valid_acc,
+                    current_valid_loss=valid_loss,
+                    current_train_acc=train_acc,
+                    epoch=epoch,
+                    fold=fold,
+                    model=model,
+                    optimizer=optimizer
+                )
             
             # updating learning rate
             if not scheduler is None:
@@ -344,16 +394,25 @@ def training_pipeline(
             ], axis=0)
         
         # printing the best result
-        print(); print("*" * 40);
-        print(f"Epoch: {sbm.best_epoch}")
-        print(f"Best F1-Score: {sbm.best_valid_f1}")
-        print(f"Best Loss: {sbm.best_valid_loss}")
-        print("*" * 40); print();
-        
-        best_train_f1.append(sbm.best_train_f1)
-        best_valid_f1.append(sbm.best_valid_f1)
-        best_test_f1.append(sbm.best_test_f1)
-                
+        if dataset == "propor2022":
+            print(); print("*" * 40);
+            print(f"Epoch: {sbm.best_epoch}")
+            print(f"Best F1-Score: {sbm.best_valid_f1}")
+            print(f"Best Loss: {sbm.best_valid_loss}")
+            print("*" * 40); print();
+            best_train_f1.append(sbm.best_train_f1)
+            best_valid_f1.append(sbm.best_valid_f1)
+            best_test_f1.append(sbm.best_test_f1)
+        else:            
+            print(); print("*" * 40);
+            print(f"Epoch: {sbm.best_epoch}")
+            print(f"Best Unweighted Accuracy: {sbm.best_valid_acc}")
+            print(f"Best Loss: {sbm.best_valid_loss}")
+            print("*" * 40); print();
+            best_train_f1.append(sbm.best_train_f1)
+            best_valid_f1.append(sbm.best_valid_f1)
+            best_test_f1.append(sbm.best_test_f1)
+            
         logs = logs.reset_index(drop=True)
         logs.to_csv(
             path_or_buf=os.path.join(log_path, f"fold{fold if total_folds != 1 else ''}.csv"),
@@ -381,7 +440,13 @@ if __name__ == "__main__":
     
     # parameters defination
     k_fold = None
-    max_seconds = 16
+    
+    if params["dataset"].lower() == "propor2022":
+        max_seconds = 16
+    elif params["dataset"].lower() == "emodb":
+        max_seconds = 10
+    elif params["dataset"].lower() == "ravdess":
+        max_seconds = 6
     
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]

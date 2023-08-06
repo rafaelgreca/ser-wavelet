@@ -1,8 +1,8 @@
 {
-    "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
+    "input_path": "/media/greca/HD/Datasets/RAVDESS/",
     "output_path": "./features8k",
     "sample_rate": 8000,
-    "dataset": "propor2022",
+    "dataset": "ravdess",
     "mode": "mode_1",
     "wavelet": {
         "type": "dwt",
@@ -33,7 +33,7 @@
     "model": {
         "name": "cnn3",
         "use_gpu": true,
-        "output_path": "./experiments/Experimento 15/checkpoints",
+        "output_path": "./checkpoints",
         "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,
