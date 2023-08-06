@@ -12,8 +12,8 @@
     },
     "feature": {
         "name": "mel_spectrogram",
-        "n_fft": 1024,
-        "hop_length": 320,
+        "n_fft": 400,
+        "hop_length": 200,
         "n_mels": 128,
         "f_min": 0,
         "f_max": 4000
@@ -33,8 +33,8 @@
     "model": {
         "name": "cnn3",
         "use_gpu": true,
-        "output_path": "./checkpoints",
-        "batch_size": 32,
+        "output_path": "./experiments/Experimento 7/checkpoints",
+        "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,
         "use_lr_scheduler": false

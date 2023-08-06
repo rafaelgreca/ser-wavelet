@@ -151,23 +151,23 @@ class CNN10(nn.Module):
         input: torch.Tensor
     ) -> torch.Tensor:
         x = self.conv_block1(input, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block2(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block3(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block4(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = torch.mean(x, dim=3)
         
         (x1, _) = torch.max(x, dim=2)
         x2 = torch.mean(x, dim=2)
         x = x1 + x2
-        x = F.dropout(x, p=0.5)
+        x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu_(self.fc1(x))
         
-        embedding = F.dropout(x, p=0.5)
-        output_dict = {"embedding": embedding}
+        embedding = F.dropout(x, p=0.5, training=self.training)
+        output_dict = {"embedding": x}
 
         return output_dict
 
@@ -226,23 +226,23 @@ class Cnn6(nn.Module):
         """
         Input: (batch_size, data_length)"""
         x = self.conv_block1(input, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block2(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block3(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block4(x, pool_size=(2, 2), pool_type='avg')
-        x = F.dropout(x, p=0.2)
+        x = F.dropout(x, p=0.2, training=self.training)
         x = torch.mean(x, dim=3)
         
         (x1, _) = torch.max(x, dim=2)
         x2 = torch.mean(x, dim=2)
         x = x1 + x2
-        x = F.dropout(x, p=0.5)
+        x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu_(self.fc1(x))
-        embedding = F.dropout(x, p=0.5)
+        embedding = F.dropout(x, p=0.5, training=self.training)
         
-        output_dict = output_dict = {"embedding": embedding}
+        output_dict = output_dict = {"embedding": x}
 
         return output_dict
     

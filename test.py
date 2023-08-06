@@ -3,16 +3,17 @@ import os
 import json
 import torch
 import torch.nn as nn
-from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score
 from torch.utils.data import DataLoader
 from src.utils import read_feature, choose_model
 from src.dataset import create_dataloader
+from typing import Dict
 
 def test(
     model: nn.Module,
     dataloader: DataLoader,
     device: torch.device
-) -> str:
+) -> Dict:
     """
     Function responsible for the model testing in the test dataset.
 
@@ -22,7 +23,7 @@ def test(
         device (torch.device): which device to use.
 
     Returns:
-        str: the test classification report.
+        Dict: the test metrics score.
     """
     model.eval()
     predictions = []
@@ -38,22 +39,47 @@ def test(
             
             output = model(data)
             
-            prediction = output.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
-            prediction = prediction.detach().cpu().numpy()
+            # prediction = output.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+            prediction = output.detach().cpu().numpy()
             predictions.extend(prediction.tolist())
             
-            target = target.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+            #  target = target.argmax(dim=-1, keepdim=True).to(dtype=torch.int)
             target = target.detach().cpu().numpy()
             targets.extend(target.tolist())
     
-    class_report = classification_report(
-        targets,
-        predictions,
+    roc_auc = roc_auc_score(
+        y_true=targets,
+        y_score=predictions,
+        average="macro",
+        multi_class="ovr"
+    )
+    
+    predictions = torch.Tensor(predictions).argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+    predictions = predictions.numpy().tolist()
+    
+    targets = torch.Tensor(targets).argmax(dim=-1, keepdim=True).to(dtype=torch.int)
+    targets = targets.numpy().tolist()
+    
+    f1_score = classification_report(
+        y_true=targets,
+        y_pred=predictions,
         digits=4,
         output_dict=True,
         zero_division=0.0
+    )["macro avg"]["f1-score"]
+    
+    accuracy = accuracy_score(
+        y_true=targets, 
+        y_pred=predictions
     )
-    return class_report
+        
+    metrics = {
+        "f1-score macro": f1_score,
+        "unweighted accuracy": accuracy,
+        "roc-auc macro": roc_auc
+    }
+    
+    return metrics
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -98,7 +124,8 @@ if __name__ == "__main__":
         model = choose_model(
             mode=params["mode"],
             model_name=model_name,
-            device=device
+            device=device,
+            dataset=params["dataset"]
         )
                 
         # creating the test dataloader
@@ -125,7 +152,7 @@ if __name__ == "__main__":
                     )["model_state_dict"]
                 )
                 
-                fold_report = test(
+                scores = test(
                     model=model,
                     dataloader=test_dataloader,
                     device=device
@@ -133,8 +160,9 @@ if __name__ == "__main__":
                 
                 print(); print("#" * 20)
                 print(f"FOLD: {fold}")
-                print(f"REPORT:")
-                print(fold_report)
+                print(f"F1-Score macro: {scores['f1-score macro']}")
+                print(f"Unweighted accuracy: {scores['unweighted accuracy']}")
+                print(f"ROC-AUC macro: {scores['roc-auc macro']}")
                 print("#" * 20); print()
                 
         else:
@@ -145,7 +173,7 @@ if __name__ == "__main__":
                 )["model_state_dict"]
             )
             
-            report = test(
+            scores = test(
                 model=model,
                 dataloader=test_dataloader,
                 device=device
@@ -153,7 +181,9 @@ if __name__ == "__main__":
             
             print(); print("#" * 20)
             print(f"REPORT:")
-            print(report)
+            print(f"F1-Score macro: {scores['f1-score macro']}")
+            print(f"Unweighted accuracy: {scores['unweighted accuracy']}")
+            print(f"ROC-AUC macro: {scores['roc-auc macro']}")
             print("#" * 20); print()      
     else:
         raise "Please run the feature extraction algorithm first."

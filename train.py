@@ -309,14 +309,12 @@ def training_pipeline(
                 loss=loss
             )
 
-            report = test(
+            test_f1 = test(
                 model=model,
                 dataloader=test_dataloader,
                 device=device
-            )
-            
-            test_f1 = report["macro avg"]["f1-score"]
-                        
+            )["f1-score macro"]
+                                    
             # saving the best model
             sbm(
                 current_valid_f1=valid_f1,

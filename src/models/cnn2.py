@@ -65,42 +65,42 @@ class CNN2(nn.Module):
         super().__init__()
         
         if input_channels == 1:
-            linear_input_features = 1406464
+            linear_input_features = 2720256
         elif input_channels == 4:
-            linear_input_features = 1103872
+            linear_input_features = 550400
             
         self.cnn = nn.Sequential(
             FLB(
                 input_channels=input_channels,
                 output_channels=64,
-                kernel_size=(2, 2)
+                kernel_size=(3, 3)
             ),
             nn.MaxPool2d(kernel_size=(2, 2)),
             FLB(
                 input_channels=64,
                 output_channels=128,
-                kernel_size=(2, 2)
+                kernel_size=(3, 3)
             ),
             FLB(
                 input_channels=128,
                 output_channels=256,
-                kernel_size=(2, 2)
+                kernel_size=(3, 3)
             ),
             nn.MaxPool2d(kernel_size=(2, 2)),
             FLB(
                 input_channels=256,
                 output_channels=512,
-                kernel_size=(2, 2)
+                kernel_size=(3, 3)
             ),
             FLB(
                 input_channels=512,
                 output_channels=512,
-                kernel_size=(2, 2)
+                kernel_size=(3, 3)
             ),
             nn.Flatten(),
             nn.Linear(
                 in_features=linear_input_features,
-                out_features=128
+                out_features=num_classes
             )
         )
         
@@ -117,12 +117,12 @@ class CNN2(nn.Module):
         
         self.model = nn.Sequential(
             self.cnn,
-            self.lstm,
-            Attention_Layer(256),
-            nn.Linear(
-                in_features=256,
-                out_features=num_classes
-            )
+            # self.lstm,
+            # Attention_Layer(256),
+            # nn.Linear(
+            #     in_features=128,
+            #     out_features=num_classes
+            # )
         )
         self.model.apply(weight_init)
     

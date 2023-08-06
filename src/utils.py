@@ -71,7 +71,7 @@ def choose_model(
                 num_classes=num_classes
             ).to(device)
         elif model_name == "cnn3":
-            model = Transfer_CNN6(
+            model = Transfer_CNN10(
                 input_channels=1,
                 num_classes=num_classes,
                 load_pretrained=False,
