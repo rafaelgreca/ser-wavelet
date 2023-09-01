@@ -1,9 +1,8 @@
 latex/
 experiments/
-features_coraa/
-features_emodb/
-pretrained/
+features/
 checkpoints/
+checkpoints_emodb/
 logs/
 
 # Byte-compiled / optimized / DLL files
