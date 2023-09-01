@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 import os
 import torch
 import torch.nn.functional as F
@@ -61,6 +62,8 @@ def choose_model(
         num_classes = 7
     elif dataset == "ravdess":
         num_classes = 8
+    elif dataset == "savee":
+        num_classes = 7
     else:
         raise ValueError("Invalid dataset")
     
@@ -182,7 +185,17 @@ def labels_mapping(
             "sad": 6,
             "surprised": 7
         })
-    
+    elif dataset == "savee":
+        df["label"] = df["label"].replace({
+            "neutral": 0,
+            "anger": 1,
+            "disgust": 2,
+            "fear": 3,
+            "happiness": 4,
+            "sadness": 5,
+            "surprise": 6
+        })
+        
     return df
 
 def read_feature(
@@ -340,6 +353,59 @@ def create_emodb_train_dataframe(
     
     return df.reset_index(drop=True)
 
+def create_savee_train_dataframe(
+    path: str = "/media/greca/HD/Datasets/SAVEE/"
+) -> pd.DataFrame:
+    """
+    Creates a SAVEE's pandas DataFrame containing all the training files.
+    
+    Args:
+        path (str): the path to the CSV file.
+    
+    Returns:
+        df (pd.DataFrame): the pandas DataFrame.
+    """
+    wav_files = [
+        file
+        for file in os.listdir(path)
+        if file.endswith(".wav")
+    ]
+    df = pd.DataFrame()
+    
+    for wav in wav_files:
+        wav_file = os.path.basename(wav)
+        speaker_file = wav_file[:2]
+        label = wav_file[3:]
+        label = re.findall("[a-zA-Z]+", str(label))[0]
+        
+        if label == "a":
+            label = "anger"
+        elif label == "d":
+            label = "disgust"
+        elif label == "f":
+            label = "fear"
+        elif label == "h":
+            label = "happiness"
+        elif label == "sa":
+            label = "sadness"
+        elif label == "n":
+            label = "neutral"
+        elif label == "su":
+            label = "surprise"
+        
+        row = pd.DataFrame({
+            "file": [os.path.join(path, wav)],
+            "label": [label],
+            "wav_file": [wav]
+        })
+        
+        df = pd.concat(
+            [df, row],
+            axis=0
+        )
+    
+    return df.reset_index(drop=True)
+
 def create_propor_train_dataframe(
     path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
 ) -> pd.DataFrame:
@@ -446,7 +512,11 @@ def feature_extraction_pipeline(
         train_df = create_ravdess_train_dataframe(
             path=input_path
         )
-        
+    elif dataset == "savee":
+        train_df = create_savee_train_dataframe(
+            path=input_path
+        )
+          
     train_df = labels_mapping(
         df=train_df,
         dataset=dataset

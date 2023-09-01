@@ -3,7 +3,7 @@ import os
 import json
 import torch
 import torch.nn as nn
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, roc_auc_score
+from sklearn.metrics import classification_report, accuracy_score, roc_auc_score
 from torch.utils.data import DataLoader
 from src.utils import read_feature, choose_model
 from src.dataset import create_dataloader
@@ -93,8 +93,16 @@ if __name__ == "__main__":
     
     # parameters defination
     k_fold = None
-    max_seconds = 15
     
+    if params["dataset"].lower() == "propor2022":
+        max_seconds = 16
+    elif params["dataset"].lower() == "emodb":
+        max_seconds = 10
+    elif params["dataset"].lower() == "ravdess":
+        max_seconds = 6
+    elif params["dataset"].lower() == "savee":
+        max_seconds = 8
+        
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]
     
@@ -106,16 +114,17 @@ if __name__ == "__main__":
         feat_path = os.path.join(params["output_path"], params["dataset"])
         
         # reading training audio features
-        X_test = read_feature(
-            path=feat_path,
-            name="X_test.pth",
-        )
-        
-        y_test = read_feature(
-            path=feat_path,
-            name="y_test.pth",
-        )
-        
+        if params["dataset"].lower() == "propor2022":
+            X_test = read_feature(
+                path=feat_path,
+                name="X_test.pth",
+            )
+            
+            y_test = read_feature(
+                path=feat_path,
+                name="y_test.pth",
+            )
+                    
         device = torch.device("cuda") if params["model"]["use_gpu"] else torch.device("cpu")
           
         output_path = params["model"]["output_path"]
@@ -127,24 +136,35 @@ if __name__ == "__main__":
             device=device,
             dataset=params["dataset"]
         )
-                
-        # creating the test dataloader
-        test_dataloader = create_dataloader(
-            X=X_test,
-            y=y_test,
-            feature_config=feat_config,
-            wavelet_config=wavelet_config,
-            data_augmentation_config=None,
-            num_workers=0,
-            mode=params["mode"],
-            shuffle=False,
-            training=False,
-            batch_size=params["model"]["batch_size"],
-            data_augment_target=None
-        )
-        
+                        
         if not k_fold is None:
             for fold in range(k_fold):
+                if params["dataset"].lower() != "propor2022":
+                    X_test = read_feature(
+                        path=os.path.join(feat_path, f"fold{fold}"),
+                        name="X_valid.pth",
+                    )
+                    
+                    y_test = read_feature(
+                        path=os.path.join(feat_path, f"fold{fold}"),
+                        name="y_valid.pth",
+                    )
+                
+                # creating the test dataloader
+                test_dataloader = create_dataloader(
+                    X=X_test,
+                    y=y_test,
+                    feature_config=feat_config,
+                    wavelet_config=wavelet_config,
+                    data_augmentation_config=None,
+                    num_workers=0,
+                    mode=params["mode"],
+                    shuffle=False,
+                    training=False,
+                    batch_size=params["model"]["batch_size"],
+                    data_augment_target=None
+                )
+                
                 # loading the trained model parameters
                 model.load_state_dict(
                     torch.load(
@@ -166,11 +186,37 @@ if __name__ == "__main__":
                 print("#" * 20); print()
                 
         else:
+            if params["dataset"].lower() != "propor2022":
+                X_test = read_feature(
+                    path=feat_path,
+                    name="X_valid.pth",
+                )
+                
+                y_test = read_feature(
+                    path=feat_path,
+                    name="y_valid.pth",
+                )
+                
             # loading the trained model parameters
             model.load_state_dict(
                 torch.load(
                     os.path.join(output_path, params["feature"]["dataset"], params["mode"], model_name, f"{model_name}.pth")
                 )["model_state_dict"]
+            )
+            
+            # creating the test dataloader
+            test_dataloader = create_dataloader(
+                X=X_test,
+                y=y_test,
+                feature_config=feat_config,
+                wavelet_config=wavelet_config,
+                data_augmentation_config=None,
+                num_workers=0,
+                mode=params["mode"],
+                shuffle=False,
+                training=False,
+                batch_size=params["model"]["batch_size"],
+                data_augment_target=None
             )
             
             scores = test(

@@ -179,7 +179,7 @@ def training_pipeline(
             data_augment_target = [0, 1, 2]
         else:
             raise ValueError("Invalid arguments for target. Should be 'all', 'majority' or 'minority'")
-    elif dataset == "emodb":
+    elif dataset == "emodb" or dataset == "savee":
         if data_augmentation_config["target"] == "all":
             data_augment_target = [0, 1, 2, 3, 4, 5, 6]
         else:
@@ -409,9 +409,8 @@ def training_pipeline(
             print(f"Best Unweighted Accuracy: {sbm.best_valid_acc}")
             print(f"Best Loss: {sbm.best_valid_loss}")
             print("*" * 40); print();
-            best_train_f1.append(sbm.best_train_f1)
-            best_valid_f1.append(sbm.best_valid_f1)
-            best_test_f1.append(sbm.best_test_f1)
+            best_train_f1.append(sbm.best_train_acc)
+            best_valid_f1.append(sbm.best_valid_acc)
             
         logs = logs.reset_index(drop=True)
         logs.to_csv(
@@ -447,7 +446,9 @@ if __name__ == "__main__":
         max_seconds = 10
     elif params["dataset"].lower() == "ravdess":
         max_seconds = 6
-    
+    elif params["dataset"].lower() == "savee":
+        max_seconds = 8
+        
     if "kfold" in params.keys():
         k_fold = params["kfold"]["num_k"]
     

@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchlibrosa.stft import Spectrogram, LogmelFilterBank
-from torchlibrosa.augmentation import SpecAugmentation
 
 def init_layer(layer: nn.Module) -> None:
-    """Initialize a Linear or Convolutional layer. """
+    """
+    Initialize a Linear or Convolutional layer.
+    """
     nn.init.xavier_uniform_(layer.weight)
  
     if hasattr(layer, "bias"):
@@ -13,7 +13,9 @@ def init_layer(layer: nn.Module) -> None:
             layer.bias.data.fill_(0.)
             
 def init_bn(bn: nn.Module) -> None:
-    """Initialize a Batchnorm layer. """
+    """
+    Initialize a Batchnorm layer.
+    """
     bn.bias.data.fill_(0.)
     bn.weight.data.fill_(1.)
 
@@ -103,35 +105,6 @@ class CNN10(nn.Module):
         input_channels: int
     ) -> None:
         super().__init__()
-
-        window = 'hann'
-        center = True
-        pad_mode = 'reflect'
-        ref = 1.0
-        amin = 1e-10
-        top_db = None
-        sample_rate = 32000
-        window_size = 1024
-        hop_size = 320
-        mel_bins = 64
-        fmin = 0
-        fmax = 32000
-        
-        # Spectrogram extractor
-        self.spectrogram_extractor = Spectrogram(n_fft=window_size, hop_length=hop_size, 
-            win_length=window_size, window=window, center=center, pad_mode=pad_mode, 
-            freeze_parameters=True)
-
-        # Logmel feature extractor
-        self.logmel_extractor = LogmelFilterBank(sr=sample_rate, n_fft=window_size, 
-            n_mels=mel_bins, fmin=fmin, fmax=fmax, ref=ref, amin=amin, top_db=top_db, 
-            freeze_parameters=True)
-
-        # Spec augmenter
-        self.spec_augmenter = SpecAugmentation(time_drop_width=64, time_stripes_num=2, 
-            freq_drop_width=8, freq_stripes_num=2)
-        
-        self.bn0 = nn.BatchNorm2d(64)
         self.conv_block1 = ConvBlock(in_channels=input_channels, out_channels=64)
         self.conv_block2 = ConvBlock(in_channels=64, out_channels=128)
         self.conv_block3 = ConvBlock(in_channels=128, out_channels=256)
@@ -165,8 +138,6 @@ class CNN10(nn.Module):
         x = x1 + x2
         x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu_(self.fc1(x))
-        
-        embedding = F.dropout(x, p=0.5, training=self.training)
         output_dict = {"embedding": x}
 
         return output_dict
@@ -177,36 +148,6 @@ class Cnn6(nn.Module):
         input_channels: int
     ):
         super().__init__()
-
-        window = 'hann'
-        center = True
-        pad_mode = 'reflect'
-        ref = 1.0
-        amin = 1e-10
-        top_db = None
-        sample_rate = 32000
-        window_size = 1024
-        hop_size = 320
-        mel_bins = 64
-        fmin = 0
-        fmax = 32000
-
-        # Spectrogram extractor
-        self.spectrogram_extractor = Spectrogram(n_fft=window_size, hop_length=hop_size, 
-            win_length=window_size, window=window, center=center, pad_mode=pad_mode, 
-            freeze_parameters=True)
-
-        # Logmel feature extractor
-        self.logmel_extractor = LogmelFilterBank(sr=sample_rate, n_fft=window_size, 
-            n_mels=mel_bins, fmin=fmin, fmax=fmax, ref=ref, amin=amin, top_db=top_db, 
-            freeze_parameters=True)
-
-        # Spec augmenter
-        self.spec_augmenter = SpecAugmentation(time_drop_width=64, time_stripes_num=2, 
-            freq_drop_width=8, freq_stripes_num=2)
-
-        self.bn0 = nn.BatchNorm2d(64)
-
         self.conv_block1 = ConvBlock5x5(in_channels=input_channels, out_channels=64)
         self.conv_block2 = ConvBlock5x5(in_channels=64, out_channels=128)
         self.conv_block3 = ConvBlock5x5(in_channels=128, out_channels=256)
@@ -218,13 +159,13 @@ class Cnn6(nn.Module):
         self.init_weight()
 
     def init_weight(self):
-        init_bn(self.bn0)
         init_layer(self.fc1)
         init_layer(self.fc_audioset)
  
     def forward(self, input, mixup_lambda=None):
         """
-        Input: (batch_size, data_length)"""
+        Input: (batch_size, data_length)
+        """
         x = self.conv_block1(input, pool_size=(2, 2), pool_type='avg')
         x = F.dropout(x, p=0.2, training=self.training)
         x = self.conv_block2(x, pool_size=(2, 2), pool_type='avg')
@@ -240,8 +181,6 @@ class Cnn6(nn.Module):
         x = x1 + x2
         x = F.dropout(x, p=0.5, training=self.training)
         x = F.relu_(self.fc1(x))
-        embedding = F.dropout(x, p=0.5, training=self.training)
-        
         output_dict = output_dict = {"embedding": x}
 
         return output_dict

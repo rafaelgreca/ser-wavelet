@@ -58,6 +58,8 @@ def split_data(
         num_classes = 7
     elif dataset == "ravdess":
         num_classes = 8
+    elif dataset == "savee":
+        num_classes = 7
         
     if not k_fold is None:
         skf = StratifiedKFold(
