@@ -296,6 +296,16 @@ class SpecAugment:
         starts: torch.Tensor,
         consecutive: int
     ) -> torch.Tensor:
+        """
+        Mask the frames.
+
+        Args:
+            starts (torch.Tensor): the frames tensor.
+            consecutive (int): how many frames will be masked.
+
+        Returns:
+            torch.Tensor: the masked frames' tensor.
+        """
         tiled = starts.expand(consecutive, starts.size(0)).permute(1, 0)
         offset = torch.arange(consecutive).expand_as(tiled)
         intervals = tiled + offset

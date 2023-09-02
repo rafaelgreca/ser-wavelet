@@ -74,7 +74,7 @@ def train(
         
     train_loss = train_loss/index
     
-    if dataset == "propor2022":
+    if dataset == "coraa":
         train_f1 = classification_report(
             targets,
             predictions,
@@ -140,7 +140,7 @@ def evaluate(
     
     validation_loss = validation_loss/index
     
-    if dataset == "propor2022":
+    if dataset == "coraa":
         validation_f1 = classification_report(
             targets,
             predictions,
@@ -170,7 +170,7 @@ def training_pipeline(
     total_folds = len(training_data)
     best_valid_f1, best_train_f1, best_test_f1 = [], [], []
         
-    if dataset == "propor2022":
+    if dataset == "coraa":
         if data_augmentation_config["target"] == "majority":
             data_augment_target = [0]
         elif data_augmentation_config["target"] == "minority":
@@ -200,7 +200,7 @@ def training_pipeline(
     feat_path = os.path.join(params["output_path"], params["dataset"])
         
     # reading training audio features (CORAA only)
-    if dataset == "propor2022":
+    if dataset == "coraa":
         X_test = read_feature(
             path=feat_path,
             name="X_test.pth",
@@ -298,7 +298,7 @@ def training_pipeline(
         )
         
         # creating the test dataloader (CORAA only)
-        if dataset == "propor2022":
+        if dataset == "coraa":
             test_dataloader = create_dataloader(
                 X=X_test,
                 y=y_test,
@@ -344,7 +344,7 @@ def training_pipeline(
                 dataset=dataset
             )
 
-            if dataset == "propor2022":
+            if dataset == "coraa":
                 test_f1 = test(
                     model=model,
                     dataloader=test_dataloader,
@@ -394,7 +394,7 @@ def training_pipeline(
             ], axis=0)
         
         # printing the best result
-        if dataset == "propor2022":
+        if dataset == "coraa":
             print(); print("*" * 40);
             print(f"Epoch: {sbm.best_epoch}")
             print(f"Best F1-Score: {sbm.best_valid_f1}")
@@ -440,7 +440,7 @@ if __name__ == "__main__":
     # parameters defination
     k_fold = None
     
-    if params["dataset"].lower() == "propor2022":
+    if params["dataset"].lower() == "coraa":
         max_seconds = 16
     elif params["dataset"].lower() == "emodb":
         max_seconds = 10

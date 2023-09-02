@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # parameters defination
     k_fold = None
     
-    if params["dataset"].lower() == "propor2022":
+    if params["dataset"].lower() == "coraa":
         max_seconds = 16
     elif params["dataset"].lower() == "emodb":
         max_seconds = 10
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         feat_path = os.path.join(params["output_path"], params["dataset"])
         
         # reading training audio features
-        if params["dataset"].lower() == "propor2022":
+        if params["dataset"].lower() == "coraa":
             X_test = read_feature(
                 path=feat_path,
                 name="X_test.pth",
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                         
         if not k_fold is None:
             for fold in range(k_fold):
-                if params["dataset"].lower() != "propor2022":
+                if params["dataset"].lower() != "coraa":
                     X_test = read_feature(
                         path=os.path.join(feat_path, f"fold{fold}"),
                         name="X_valid.pth",
@@ -186,7 +186,7 @@ if __name__ == "__main__":
                 print("#" * 20); print()
                 
         else:
-            if params["dataset"].lower() != "propor2022":
+            if params["dataset"].lower() != "coraa":
                 X_test = read_feature(
                     path=feat_path,
                     name="X_valid.pth",

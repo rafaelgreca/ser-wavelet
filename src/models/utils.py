@@ -77,7 +77,7 @@ class SaveBestModel:
             optimizer (torch.optim): the optimizer objet.
             fold (Union[int, None]): the current fold.
         """
-        if self.dataset == "propor2022":
+        if self.dataset == "coraa":
             if current_valid_f1 > self.best_valid_f1:
                 self.best_valid_loss = current_valid_loss
                 self.best_valid_f1 = current_valid_f1
@@ -114,7 +114,7 @@ class SaveBestModel:
         """
         Print the best model's metric summary.
         """
-        if self.dataset == "propor2022":
+        if self.dataset == "coraa":
             print("\nSaving model...")
             print(f"Epoch: {self.best_epoch}")
             print(f"Train F1-Score: {self.best_train_f1:1.6f}")

@@ -8,9 +8,8 @@ import math
 import torch.nn as nn 
 from torch.nn.functional import one_hot
 from src.processing import split_data, processing
-from src.models.cnn import CNN_Mode1, CNN_Mode2
-from src.models.cnn2 import CNN2
-from src.models.cnn3 import Transfer_CNN10, Transfer_CNN6
+from src.models.aghajani import CNN
+from src.models.qiuqiangkong import Transfer_CNN10, Transfer_CNN6
 from typing import Optional, Union, Tuple, List
 
 def pad_features(
@@ -56,7 +55,7 @@ def choose_model(
     Returns:
         nn.Module: the created model.
     """
-    if dataset == "propor2022":
+    if dataset == "coraa":
         num_classes = 3
     elif dataset == "emodb":
         num_classes = 7
@@ -68,16 +67,12 @@ def choose_model(
         raise ValueError("Invalid dataset")
     
     if mode == "mode_1":
-        if model_name == "cnn":
-            model = CNN_Mode1(
-                num_classes=num_classes
-            ).to(device)
-        elif model_name == "cnn2":
-            model = CNN2(
+        if model_name == "aghajani":
+            model = CNN(
                 input_channels=1,
                 num_classes=num_classes
             ).to(device)
-        elif model_name == "cnn3":
+        elif model_name == "qiuqiangkong":
             model = Transfer_CNN10(
                 input_channels=1,
                 num_classes=num_classes,
@@ -85,16 +80,12 @@ def choose_model(
                 freeze_base=False
             ).to(device)
     elif mode == "mode_2":
-        if model_name == "cnn":
-            model = CNN_Mode2(
-                num_classes=num_classes
-            ).to(device)
-        elif model_name == "cnn2":
-            model = CNN2(
+        if model_name == "aghajani":
+            model = CNN(
                 input_channels=4,
                 num_classes=num_classes
             ).to(device)
-        elif model_name == "cnn3":
+        elif model_name == "qiuqiangkong":
             model = Transfer_CNN6(
                 input_channels=4,
                 num_classes=num_classes,
@@ -158,7 +149,7 @@ def labels_mapping(
     Returns:
         pd.DataFrame: the dataframe with labels mapped.
     """
-    if dataset == "propor2022":
+    if dataset == "coraa":
         df["label"] = df["label"].replace({
             "neutral": 0,
             "non-neutral-male": 1,
@@ -225,11 +216,11 @@ def read_feature(
     
     return feature
 
-def prepare_propor_test_dataframe(
+def prepare_coraa_test_dataframe(
     path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
 ) -> pd.DataFrame:
     """
-    Prepares the PROPOR 2022's testing dataset to have the same structure as
+    Prepares the CORAA's testing dataset to have the same structure as
     the training dataset.
 
     Args:
@@ -406,11 +397,11 @@ def create_savee_train_dataframe(
     
     return df.reset_index(drop=True)
 
-def create_propor_train_dataframe(
+def create_coraa_train_dataframe(
     path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
 ) -> pd.DataFrame:
     """
-    Creates a PROPOR 2022's pandas DataFrame containing
+    Creates a CORAA's pandas DataFrame containing
     all the training files using the same structure as the
     `test_ser_metadata.csv` file.
     
@@ -500,8 +491,8 @@ def feature_extraction_pipeline(
     apply_one_hot_encoder: bool = True
 ) -> None:
     # reading the training dataset
-    if dataset == "propor2022":
-        train_df = create_propor_train_dataframe(
+    if dataset == "coraa":
+        train_df = create_coraa_train_dataframe(
             path=input_path
         )
     elif dataset == "emodb":
@@ -541,8 +532,8 @@ def feature_extraction_pipeline(
     )
     
     # reading the test dataset (only for CORAA)
-    if dataset == "propor2022":
-        test_df = prepare_propor_test_dataframe(
+    if dataset == "coraa":
+        test_df = prepare_coraa_test_dataframe(
             path=input_path
         )
         test_df = labels_mapping(

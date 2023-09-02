@@ -51,6 +51,21 @@ def split_data(
     k_fold: int = 0,
     apply_one_hot_encoder: bool = True
 ) -> None:
+    """
+    Split the training data into training and validation set.
+    If the dataset is 'coraa', then the test set will be created using
+    the official test data.
+
+    Args:
+        X (torch.Tensor): the features tensor.
+        y (torch.Tensor): the labels tensor.
+        dataset (str): which dataset is being used.
+        output_path (str): the output path where the data will be saved.
+        k_fold (int, optional): how many folds the data will be spliited into.
+                                If zero, then normal split will be applied.
+                                Otherwise, kfold will be applied. Defaults to 0.
+        apply_one_hot_encoder (bool, optional): if the one hot encoder will be applied. Defaults to True.
+    """
     skf = None
     if dataset == "propor2022":
         num_classes = 3

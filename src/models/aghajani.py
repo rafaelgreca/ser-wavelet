@@ -56,7 +56,7 @@ class FLB(nn.Module):
         X = self.block(X)
         return X
 
-class CNN2(nn.Module):
+class CNN(nn.Module):
     def __init__(
         self,
         input_channels: int,
