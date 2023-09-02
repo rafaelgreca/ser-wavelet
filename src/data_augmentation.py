@@ -133,12 +133,11 @@ class Denoiser:
                     self.min_cutoff_freq = 150
                     self.max_cutoff_freq = self.sample_rate // 2
 
-                    # cutoff_mel = np.random.uniform(
-                    #     low=convert_frequency_to_mel(self.min_cutoff_freq),
-                    #     high=convert_frequency_to_mel(self.max_cutoff_freq),
-                    # )
-                    # self.w = convert_mel_to_frequency(cutoff_mel)
-                    self.w = 400
+                    cutoff_mel = np.random.uniform(
+                        low=convert_frequency_to_mel(self.min_cutoff_freq),
+                        high=convert_frequency_to_mel(self.max_cutoff_freq),
+                    )
+                    self.w = convert_mel_to_frequency(cutoff_mel)
                     
                     waveform = self._apply_filter(
                         waveform,
@@ -151,12 +150,11 @@ class Denoiser:
                     self.min_cutoff_freq = 20
                     self.max_cutoff_freq = 2400
 
-                    # cutoff_mel = np.random.uniform(
-                    #     low=convert_frequency_to_mel(self.min_cutoff_freq),
-                    #     high=convert_frequency_to_mel(self.max_cutoff_freq),
-                    # )
-                    # self.w = convert_mel_to_frequency(cutoff_mel)
-                    self.w = 700
+                    cutoff_mel = np.random.uniform(
+                        low=convert_frequency_to_mel(self.min_cutoff_freq),
+                        high=convert_frequency_to_mel(self.max_cutoff_freq),
+                    )
+                    self.w = convert_mel_to_frequency(cutoff_mel)
 
                     waveform = self._apply_filter(
                         waveform,
@@ -204,7 +202,7 @@ class Denoiser:
         )
         
         processed_samples, _ = sosfilt(
-            sos, signal, zi=sosfilt_zi(sos) * signal[0]
+            sos, signal, zi = sosfilt_zi(sos) * signal[0]
         )
         processed_samples = processed_samples.astype(np.float32)
         processed_samples = torch.from_numpy(processed_samples).unsqueeze(0)
@@ -290,7 +288,7 @@ class SpecAugment:
 
         return spec
     
-    #this function is used to mask along multiple consecutive frames - see https://github.com/s3prl/s3prl/blob/master/pretrain/mockingjay/task.py
+    # this function is used to mask along multiple consecutive frames - see https://github.com/s3prl/s3prl/blob/master/pretrain/mockingjay/task.py
     def _starts_to_intervals(
         self,
         starts: torch.Tensor,
@@ -319,10 +317,10 @@ class SpecAugment:
         Applies data augmentation to the given MFCC.
 
         Args:
-            spec (torch.Tensor): the MFCC.
+            spec (torch.Tensor): the MFCC data.
 
         Returns:
-            torch.Tensor: the augmented MFCC.
+            torch.Tensor: the augmented MFCC data.
         """
         for transformation in self.transformations:
             time_len = spec.shape[2]
@@ -425,7 +423,18 @@ class Specmix:
         x: torch.Tensor,
         band_type: str,
         mask: torch.Tensor
-    ) -> torch.Tensor: 
+    ) -> torch.Tensor:
+        """
+        Masks the feature data tensor.
+
+        Args:
+            x (torch.Tensor): the feature data.
+            band_type (str): the band type ('freq' or 'time').
+            mask (torch.Tensor): the mask tensor.
+
+        Returns:
+            torch.Tensor: the masked feature data.
+        """
         assert band_type.lower() in ["freq", "time"], f"band_type must be in ['freq', 'time']"
       
         if band_type.lower() == "freq":

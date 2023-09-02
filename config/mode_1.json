@@ -1,6 +1,6 @@
 {
     "input_path": "/media/greca/HD/Datasets/RAVDESS/",
-    "output_path": "./features8k",
+    "output_path": "./features",
     "sample_rate": 8000,
     "dataset": "ravdess",
     "mode": "mode_1",
@@ -31,9 +31,9 @@
         }
     },
     "model": {
-        "name": "cnn3",
+        "name": "qiuqiangkong",
         "use_gpu": true,
-        "output_path": "./checkpoints",
+        "output_path": "./checkpoints2",
         "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,

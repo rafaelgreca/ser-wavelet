@@ -167,6 +167,19 @@ def training_pipeline(
     mode: str,
     dataset: str
 ) -> None:
+    """
+    The training pipeline.
+
+    Args:
+        training_data (List): the training data.
+        validation_data (List): the validation data.
+        feature_config (Dict): the feature's configurations.
+        wavelet_config (Dict): the wavelet's configurations.
+        data_augmentation_config (Dict): the data augmentation step's configurations.
+        model_config (Dict): the model's configurations.
+        mode (str): which mode is being used.
+        dataset (str): which dataset is being used.
+    """
     total_folds = len(training_data)
     best_valid_f1, best_train_f1, best_test_f1 = [], [], []
         

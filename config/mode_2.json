@@ -1,8 +1,8 @@
 {
     "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
-    "output_path": "./features8k",
+    "output_path": "./features",
     "sample_rate": 8000,
-    "dataset": "propor2022",
+    "dataset": "coraa",
     "mode": "mode_2",
     "wavelet": {
         "type": "dwt",
@@ -31,9 +31,9 @@
         }
     },
     "model": {
-        "name": "cnn3",
+        "name": "qiuqiangkong",
         "use_gpu": true,
-        "output_path": "./experiments/Experimento 7/checkpoints",
+        "output_path": "./checkpoints2",
         "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,

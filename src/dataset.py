@@ -11,6 +11,19 @@ def _apply_augmentation_raw_audio(
     data_augmentation_config: Dict,
     feature_config: Dict
 ) -> torch.Tensor:
+    """
+    Applies data augmentation to the raw audio.
+
+    Args:
+        audio (torch.Tensor): the raw audio data.
+        data_augmentation_config (Dict): the data augmentation step configuration
+                                         (e.g., which techniques will be applied).
+        feature_config (Dict): the feature parameters configuration.
+                               (e.g., the audio sample rate, which feature is being used)
+
+    Returns:
+        torch.Tensor: the augmented audio data.
+    """
     transformations = data_augmentation_config["techniques"]
     p = data_augmentation_config["p"]
     sample_rate = feature_config["sample_rate"]
@@ -38,6 +51,20 @@ def _apply_augmentation_feature(
     data_augmentation_config: Dict,
     feature_config: Dict
 ) -> torch.Tensor:
+    """
+    Applies data augmentation to audio's feature.
+
+    Args:
+        audio (torch.Tensor): the audio feature (e.g., mel spectrogram or mfcc).
+        data_augmentation_config (Dict): the data augmentation step configuration
+                                         (e.g., which techniques will be applied).
+        feature_config (Dict): the feature parameters configuration.
+                               (e.g., the audio sample rate, which feature is being used
+                               and its configuration).
+
+    Returns:
+        torch.Tensor: the augmented audio's feature.
+    """
     transformations = data_augmentation_config["techniques"]
     p = data_augmentation_config["p"]
     
@@ -64,6 +91,9 @@ def _apply_augmentation_feature(
     return audio
 
 class Dataset_Mode2(Dataset):
+    """
+    Creates the dataset that will be used for the mode 2.
+    """
     def __init__(
         self,
         X: torch.Tensor,
@@ -171,6 +201,9 @@ class Dataset_Mode2(Dataset):
         return batch
     
 class Dataset_Mode1(Dataset):
+    """
+    Creates the dataset that will be used for the mode 1.
+    """
     def __init__(
         self,
         X: torch.Tensor,
@@ -271,6 +304,26 @@ def create_dataloader(
     shuffle: bool = True,
     training: bool = True
 ) -> DataLoader:
+    """
+    Creates the training/validation/test dataloader.
+
+    Args:
+        X (torch.Tensor): the features tensor.
+        y (torch.Tensor): the labels tensor.
+        batch_size (int): the batch size.
+        feature_config (Dict): the feature's configurations.
+        wavelet_config (Dict): the wavelet's configurations.
+        data_augmentation_config (Union[Dict, None]): the data augmentation's configurations.
+        data_augment_target (Union[str, None]): the classes which the data augmentation
+                                                will be applied on.
+        mode (str): which mode is being used (mode_1 or mode_2).
+        num_workers (int, optional): the number of workers. Defaults to 0.
+        shuffle (bool, optional): shuffle the data or not. Defaults to True.
+        training (bool, optional): if its a training data or not. Defaults to True.
+
+    Returns:
+        DataLoader: the training/validation/test dataloader.
+    """
     
     # creating the custom dataset
     if mode == "mode_1":

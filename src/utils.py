@@ -490,6 +490,20 @@ def feature_extraction_pipeline(
     input_path: str,
     apply_one_hot_encoder: bool = True
 ) -> None:
+    """
+    Feature extraction pipeline.
+
+    Args:
+        dataset (str): which dataset is being used.
+        to_mono (bool): convert the audio to mono or not.
+        sample_rate (int): audio's sample rate.
+        max_samples (int): the maximum number of data samples.
+        k_fold (int): how many folds the data will be splitted into.
+        output_path (str): the output path where the features will be saved.
+        input_path (str): the dataset input path.
+        apply_one_hot_encoder (bool, optional): if one hot encoder will be
+                                                applied or not. Defaults to True.
+    """
     # reading the training dataset
     if dataset == "coraa":
         train_df = create_coraa_train_dataframe(
@@ -563,6 +577,16 @@ def read_features_files(
     k_fold: Union[int, None],
     feat_path: str
 ) -> Tuple[List, List]:
+    """
+    Read the features files.
+
+    Args:
+        k_fold (Union[int, None]): which fold is being read.
+        feat_path (str): the extracted features path.
+
+    Returns:
+        Tuple[List, List]: the training and validation features, respectively.
+    """
     training_data = []
     validation_data = []
     
