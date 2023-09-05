@@ -50,6 +50,22 @@ Before continuing, to the code work properly you need to download the datasets c
 ├── config/
 │   ├── mode_1.json
 │   └── mode_2.json
+├── examples/
+│   ├── data_augmentation/
+│   │   ├── audioaugment.json
+│   │   ├── cutmix.json
+│   │   ├── denoiser.json
+│   │   ├── mixup.json
+│   │   ├── multiple_techniques.json
+│   │   ├── multiple_techniques_raw.json
+│   │   ├── no_augment2.json
+│   │   ├── no_augment.json
+│   │   ├── specaugment.json
+│   │   └── specmix.json
+│   ├── feature/
+│   │   ├── mel_spectrogram.json
+│   │   └── mfcc.json
+│   └── no_kfold.json
 ├── __init__.py
 ├── LICENSE
 ├── notebooks/
@@ -78,9 +94,10 @@ Before continuing, to the code work properly you need to download the datasets c
 
 Explaining briefly the main folders and files:
 
-- `config`: where the model and feature extraction configurations files (**MUST** be in a JSON format) that will be used as inputs arguments are saved;
-- `notebooks`: where the notebooks used to visualize the training/validation step, do the exploratory data analysis (EDA) and to create the analysis used for the thesis writing are saved;
-- `requirements`: where the requirements files for the installation step are saved.
+- `config`: where the model and feature extraction configurations files (**MUST** be in a JSON format) that will be used as inputs arguments are saved on;
+- `examples`: where the configuration files examples are saved on (how to use different features, data augmentation techniques, and so on);
+- `notebooks`: where the notebooks used to visualize the training/validation step, do the exploratory data analysis (EDA) and to create the analysis used for the thesis writing are saved on;
+- `requirements`: where the requirements files for the installation step are saved on;
 - `src`: where the core functions are implemented, such as: the data augmentation, feature extraction, audios preprocessing steps, and the models/datasets creation;
 - `test.py`: the main file responsible to inference the model on new data;
 - `train.py`: the main file responsible to train the model.
@@ -90,10 +107,10 @@ Explaining briefly the main folders and files:
 The following arguments **MUST** be inside the configuration JSON file (exactly as structured in the files inside the `config` folder).
 
 - `input_path`: the dataset's folder path (**MUST** exists);
-- `output_path`: the folder path where the extracted features will be saved at (if the folder doesn't exist, then it will be created);
+- `output_path`: the folder path where the extracted features will be saved on (if the folder doesn't exist, then it will be created);
 - `sample_rate`: the audio's sampling rate. E.g.: 8000;
 - `dataset`: which dataset will be used ('coraa', 'savee', 'emodb' or 'ravdess'). **MUST** be written in lowercase;
-- `mode`: which mode will be run ('mode\_1' or 'mode\_2'). **MUST** be written in lowercase;
+- `mode`: which mode will be run ('mode\_1' or 'mode\_2'). Check the image below for more details. **MUST** be written in lowercase;
 - `overwrite`: overwrite the extracted features or not;
 - `to_mono`: convert the audios to mono or not;
 - `wavelet`: wavelet's configuration dictionary;
@@ -113,17 +130,19 @@ The following arguments **MUST** be inside the configuration JSON file (exactly 
   - `mode`: where the feature will be applied on ('feature' or 'raw_audio'). **MUST** be written in lowercase;
   - `target`: which classes the data augmentation will be applied on ('all', 'majority' or 'minority'). The options 'majority' and 'minority' are available only when used on the `CORAA` dataset. **MUST** be written in lowercase; 
   - `p`: the probability of the data augmentation technique(s) be applied. **MUST** be a float number between 0 and 1. E.g.: 1;
-  - `techniques`: a dictionary where the keys are the name of data augmentation technique ('specaugment', 'cutmix', 'specmix', 'audioaugment'). The option 'audioaugment' can only be applied when `mode` is set to `raw_audio`. **MUST** be written in lowercase. Please check the `examples` folder to see which arguments must be passed for each technique.
+  - `techniques`: a dictionary where the keys are the name of data augmentation technique ('specaugment', 'cutmix', 'specmix', 'audioaugment' or 'denoiser'). The option 'audioaugment' can only be applied when `mode` is set to `raw_audio`. **MUST** be written in lowercase. Please check the `examples` folder to see which arguments must be passed for each technique.
 - `model`: model's configuration dictionary;
-  - `name`:
+  - `name`: which model architecture will be used ('[qiuqiangkong](https://github.com/qiuqiangkong/audioset_tagging_cnn)' or '[aghajani](https://www.ije.ir/article_103377.html)' (only the CNN)). **MUST** be written in lowercase;
   - `use_gpu`: use gpu or not;
-  - `output_path`: the folder path where the model's checkpoints will be saved at (if the folder doesn't exist, then it will be created);
+  - `output_path`: the folder path where the model's checkpoints will be saved on (if the folder doesn't exist, then it will be created);
   - `batch_size`: the batch size. E.g.: 16;
   - `learning_rate`: the learning rate. E.g.: 0.001;
   - `epochs`: the number of epochs. E.g.: 100;
   - `use_lr_scheduler`: use learning rate step scheduler or not (every 10 epochs the learning rate will decay a gamma value of 0.1).
 - `kfold`: kfold's configuration dictionary;
   - `num_k`: the number of folders. If zero, normal train\_test\_split will be applied. E.g.: 5;
+
+![Mode explanation](/images/modes.png)
 
 ### Running the Code
 

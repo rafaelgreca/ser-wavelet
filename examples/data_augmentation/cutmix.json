@@ -1,0 +1,45 @@
+{
+    "input_path": "/media/greca/HD/Datasets/RAVDESS/",
+    "output_path": "./features",
+    "sample_rate": 8000,
+    "dataset": "ravdess",
+    "mode": "mode_1",
+    "wavelet": {
+        "type": "dwt",
+        "name": "db4",
+        "level": 3,
+        "mode": "symmetric"
+    },
+    "feature": {
+        "name": "mel_spectrogram",
+        "n_fft": 400,
+        "hop_length": 200,
+        "n_mels": 128,
+        "f_min": 0,
+        "f_max": 4000
+    },
+    "data_augmentation": {
+        "mode": "feature",
+        "target": "all",
+        "p": 1,
+        "techniques": {
+            "cutmix": {
+                "alpha": 1.0
+            }
+        }
+    },
+    "model": {
+        "name": "qiuqiangkong",
+        "use_gpu": true,
+        "output_path": "./checkpoints2",
+        "batch_size": 16,
+        "learning_rate": 0.001,
+        "epochs": 100,
+        "use_lr_scheduler": false
+    },
+    "kfold": {
+        "num_k": 5
+    },
+    "overwrite": false,
+    "to_mono": true
+}
