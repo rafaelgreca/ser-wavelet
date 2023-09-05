@@ -34,6 +34,15 @@ pip install -r requirements/pip.txt
 
 After installing the dependencies you are ready to run the code. But first, lets understand the code and its inputs arguments, shall we?
 
+### Download the Datasets
+
+Before continuing, to the code work properly you need to download the datasets correctly. If you install using other sources, the code might not work due to different folder organization and differents files/folders names. Download the datasets using the links below:
+
+- [CORAA](https://github.com/rmarcacini/ser-coraa-pt-br);
+- [RAVDESS](https://zenodo.org/record/1188976);
+- [SAVEE](http://kahlan.eps.surrey.ac.uk/savee/);
+- [EMODB](http://www.emodb.bilderbar.info).
+
 ### Directory Structure
 
 ```bash
@@ -81,28 +90,51 @@ Explaining briefly the main folders and files:
 The following arguments **MUST** be inside the configuration JSON file (exactly as structured in the files inside the `config` folder).
 
 - `input_path`: the dataset's folder path (**MUST** exists);
-- `output_path`: the folder where the extracted features will be saved (if the folder doesn't exist, then it will be created);
-- `sample_rate`: the audio's sampling rate. E.g.: 8000, 16000, 24000 and so on;
+- `output_path`: the folder path where the extracted features will be saved at (if the folder doesn't exist, then it will be created);
+- `sample_rate`: the audio's sampling rate. E.g.: 8000;
 - `dataset`: which dataset will be used ('coraa', 'savee', 'emodb' or 'ravdess'). **MUST** be written in lowercase;
 - `mode`: which mode will be run ('mode\_1' or 'mode\_2'). **MUST** be written in lowercase;
 - `overwrite`: overwrite the extracted features or not;
 - `to_mono`: convert the audios to mono or not;
 - `wavelet`: wavelet's configuration dictionary;
+  - `type`: the wavelet's type ('dwt' or 'packet'). **MUST** be written in lowercase. Code was tested only using 'dwt';
+  - `name`: the wavelet's name. **MUST** be written exactly as used in the PyWavelets library. E.g.: 'db4';
+  - `level`: the wavelet's max level depth. E.g.: 4;
+  - `mode`: the wavelet's mode. **MUST** be written exactly as used in the PyWavelets library. E.g.: 'symmetric'.
 - `feature`: feature's configuration dictionary;
+  - `name`: which feature will be extracted ('mfcc' or 'mel\_spectrogram'). **MUST** be written in lowercase;
+  - `n_fft`: the number of n_fft. E.g.: 1024;
+  - `hop_length`: the hop length. E.g.: 512;
+  - `n_mels`: the number of mels. Only required when using `mel\_spectrogram` as feature. E.g.: 64;
+  - `n_mfcc`: the number of mfccs. Only required when using `mfcc` as feature. E.g.: 64;
+  - `f_min`: the minimum frequency. E.g.: 0;
+  - `f_max`: the maximum frequency. E.g.: 4000;
 - `data_augmentation`: data augmentation's configuration dictionary;
+  - `mode`: where the feature will be applied on ('feature' or 'raw_audio'). **MUST** be written in lowercase;
+  - `target`: which classes the data augmentation will be applied on ('all', 'majority' or 'minority'). The options 'majority' and 'minority' are available only when used on the `CORAA` dataset. **MUST** be written in lowercase; 
+  - `p`: the probability of the data augmentation technique(s) be applied. **MUST** be a float number between 0 and 1. E.g.: 1;
+  - `techniques`: a dictionary where the keys are the name of data augmentation technique ('specaugment', 'cutmix', 'specmix', 'audioaugment'). The option 'audioaugment' can only be applied when `mode` is set to `raw_audio`. **MUST** be written in lowercase. Please check the `examples` folder to see which arguments must be passed for each technique.
 - `model`: model's configuration dictionary;
+  - `name`:
+  - `use_gpu`: use gpu or not;
+  - `output_path`: the folder path where the model's checkpoints will be saved at (if the folder doesn't exist, then it will be created);
+  - `batch_size`: the batch size. E.g.: 16;
+  - `learning_rate`: the learning rate. E.g.: 0.001;
+  - `epochs`: the number of epochs. E.g.: 100;
+  - `use_lr_scheduler`: use learning rate step scheduler or not (every 10 epochs the learning rate will decay a gamma value of 0.1).
 - `kfold`: kfold's configuration dictionary;
+  - `num_k`: the number of folders. If zero, normal train\_test\_split will be applied. E.g.: 5;
 
 ### Running the Code
 
 To train the model, run the following command:
 ```python3
-python3 train.py -c CONFIG_FILE
+python3 train.py -c CONFIG_FILE_PATH
 ```
 
 To run the model's inference, run the following command (the configuration file **MUST** be the same one used above):
 ```python3
-python3 test.py -c CONFIG_FILE
+python3 test.py -c CONFIG_FILE_PATH
 ```
 
 ## Contributing
