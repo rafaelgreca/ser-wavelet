@@ -2,6 +2,10 @@
 
 Repository dedicated to the developed solution for the end-of-course work of University of São Paulo's [Master in Business Administration (MBA) in Artificial Intelligence and Big Data](https://mba.iabigdata.icmc.usp.br/) program. The solution main focus is to tackle the Speech Emotion Recognition task and is composed by a Convolutional Neural Network based on [PANNs](https://github.com/qiuqiangkong/audioset_tagging_cnn) trained using Mel Spectrogram and Discrete Wavelet Transform.
 
+How to cite:
+
+...
+
 ## Table of Contents
 
 - [Installation](#installation)
