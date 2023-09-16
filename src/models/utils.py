@@ -4,10 +4,9 @@ import torch
 import torch.nn as nn
 from typing import Union
 
+
 # All credits to: https://discuss.pytorch.org/t/same-implementation-different-results-between-keras-and-pytorch-lstm/39146
-def weight_init(
-    m: torch.nn.Module
-):
+def weight_init(m: torch.nn.Module):
     """
     Initalize all the weights in the PyTorch model to be the same as Keras.
     """
@@ -19,19 +18,16 @@ def weight_init(
         nn.init.orthogonal_(m.weight_hh_l0)
         nn.init.zeros_(m.bias_ih_l0)
         nn.init.zeros_(m.bias_hh_l0)
-        
+
+
 class SaveBestModel:
     """
     Class to save the best model while training. If the current epoch's
     validation loss is less than the previous least less, then save the
     model state.
     """
-    def __init__(
-        self,
-        output_dir: str,
-        model_name: str,
-        dataset: str
-    ) -> None:
+
+    def __init__(self, output_dir: str, model_name: str, dataset: str) -> None:
         """
         Args:
             output_dir (str): the output folder directory.
@@ -62,7 +58,7 @@ class SaveBestModel:
         current_test_f1: Union[float, None] = None,
         current_valid_acc: Union[float, None] = None,
         current_train_acc: Union[float, None] = None,
-        current_train_f1: Union[float, None] = None
+        current_train_f1: Union[float, None] = None,
     ) -> None:
         """
         Saves the best trained model.
@@ -92,24 +88,27 @@ class SaveBestModel:
                 self.best_train_acc = current_train_acc
                 self.best_epoch = epoch
                 self.save_model = True
-        
+
         if self.save_model:
             self.print_summary()
-            
+
             if not fold is None:
-                path = os.path.join(self.output_dir, f"{self.model_name}_fold{fold}.pth")
+                path = os.path.join(
+                    self.output_dir, f"{self.model_name}_fold{fold}.pth"
+                )
             else:
                 path = os.path.join(self.output_dir, f"{self.model_name}.pth")
-                
-            torch.save({
-                "epoch": epoch,
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict()
+
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
                 },
-                path
+                path,
             )
             self.save_model = False
-        
+
     def print_summary(self) -> None:
         """
         Print the best model's metric summary.

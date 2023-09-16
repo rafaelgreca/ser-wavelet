@@ -5,26 +5,23 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import math
-import torch.nn as nn 
+import torch.nn as nn
 from torch.nn.functional import one_hot
 from src.processing import split_data, processing
 from src.models.aghajani import CNN
 from src.models.qiuqiangkong import Transfer_CNN10, Transfer_CNN6
 from typing import Optional, Union, Tuple, List
 
-def pad_features(
-    features: List,
-    max_height: int,
-    max_width: int
-) -> torch.Tensor:
+
+def pad_features(features: List, max_height: int, max_width: int) -> torch.Tensor:
     """
     Auxiliary function to pad the features.
-    
+
     Args:
         features (List): the features that will be padded (mfcc, spectogram or mel_spectogram).
         max_height (int): the height max value.
         max_width (int): the width max value.
-    
+
     Returns:
         List: the padded features.
     """
@@ -34,11 +31,9 @@ def pad_features(
     ]
     return features
 
+
 def choose_model(
-    mode: str,
-    model_name: str,
-    dataset: str,
-    device: torch.device
+    mode: str, model_name: str, dataset: str, device: torch.device
 ) -> nn.Module:
     """
     Creates the model based on the given model_name and mode.
@@ -65,42 +60,34 @@ def choose_model(
         num_classes = 7
     else:
         raise ValueError("Invalid dataset")
-    
+
     if mode == "mode_1":
         if model_name == "aghajani":
-            model = CNN(
-                input_channels=1,
-                num_classes=num_classes
-            ).to(device)
+            model = CNN(input_channels=1, num_classes=num_classes).to(device)
         elif model_name == "qiuqiangkong":
             model = Transfer_CNN10(
                 input_channels=1,
                 num_classes=num_classes,
                 load_pretrained=False,
-                freeze_base=False
+                freeze_base=False,
             ).to(device)
     elif mode == "mode_2":
         if model_name == "aghajani":
-            model = CNN(
-                input_channels=4,
-                num_classes=num_classes
-            ).to(device)
+            model = CNN(input_channels=4, num_classes=num_classes).to(device)
         elif model_name == "qiuqiangkong":
             model = Transfer_CNN6(
                 input_channels=4,
                 num_classes=num_classes,
                 load_pretrained=False,
-                freeze_base=False
+                freeze_base=False,
             ).to(device)
     else:
         raise ValueError("Unknown mode")
-    
+
     return model
 
-def one_hot_encoder(
-    labels: torch.Tensor,
-    num_classes: int = -1
-) -> torch.Tensor:
+
+def one_hot_encoder(labels: torch.Tensor, num_classes: int = -1) -> torch.Tensor:
     """
     Encode the labels into the one hot format.
 
@@ -113,9 +100,8 @@ def one_hot_encoder(
     """
     return one_hot(labels, num_classes=num_classes)
 
-def convert_frequency_to_mel(
-    f: float
-) -> float:
+
+def convert_frequency_to_mel(f: float) -> float:
     """
     Extracted from: https://github.com/iver56/audiomentations/blob/24748c64d85499aefce5e21ce91d59cf1d658374/audiomentations/core/utils.py
 
@@ -124,21 +110,18 @@ def convert_frequency_to_mel(
     """
     return 2595.0 * math.log10(1.0 + f / 700.0)
 
-def convert_mel_to_frequency(
-    m: Union[float, np.array]
-) -> Union[float, np.array]:
+
+def convert_mel_to_frequency(m: Union[float, np.array]) -> Union[float, np.array]:
     """
     Extracted from: https://github.com/iver56/audiomentations/blob/24748c64d85499aefce5e21ce91d59cf1d658374/audiomentations/core/utils.py
-    
+
     Convert m mels to hertz
     https://en.wikipedia.org/wiki/Mel_scale#History_and_other_formulas
     """
     return 700.0 * (10 ** (m / 2595.0) - 1.0)
 
-def labels_mapping(
-    df: pd.DataFrame,
-    dataset: str
-) -> pd.DataFrame:
+
+def labels_mapping(df: pd.DataFrame, dataset: str) -> pd.DataFrame:
     """
     Converts the labels string to int.
 
@@ -150,50 +133,51 @@ def labels_mapping(
         pd.DataFrame: the dataframe with labels mapped.
     """
     if dataset == "coraa":
-        df["label"] = df["label"].replace({
-            "neutral": 0,
-            "non-neutral-male": 1,
-            "non-neutral-female": 2
-        })
+        df["label"] = df["label"].replace(
+            {"neutral": 0, "non-neutral-male": 1, "non-neutral-female": 2}
+        )
     elif dataset == "emodb":
-        df["label"] = df["label"].replace({
-            "neutral": 0,
-            "anger": 1,
-            "boredom": 2,
-            "disgust": 3,
-            "anxiety/fear": 4,
-            "happiness": 5,
-            "sadness": 6
-        })
+        df["label"] = df["label"].replace(
+            {
+                "neutral": 0,
+                "anger": 1,
+                "boredom": 2,
+                "disgust": 3,
+                "anxiety/fear": 4,
+                "happiness": 5,
+                "sadness": 6,
+            }
+        )
     elif dataset == "ravdess":
-        df["label"] = df["label"].replace({
-            "neutral": 0,
-            "angry": 1,
-            "calm": 2,
-            "disgust": 3,
-            "fearful": 4,
-            "happy": 5,
-            "sad": 6,
-            "surprised": 7
-        })
+        df["label"] = df["label"].replace(
+            {
+                "neutral": 0,
+                "angry": 1,
+                "calm": 2,
+                "disgust": 3,
+                "fearful": 4,
+                "happy": 5,
+                "sad": 6,
+                "surprised": 7,
+            }
+        )
     elif dataset == "savee":
-        df["label"] = df["label"].replace({
-            "neutral": 0,
-            "anger": 1,
-            "disgust": 2,
-            "fear": 3,
-            "happiness": 4,
-            "sadness": 5,
-            "surprise": 6
-        })
-        
+        df["label"] = df["label"].replace(
+            {
+                "neutral": 0,
+                "anger": 1,
+                "disgust": 2,
+                "fear": 3,
+                "happiness": 4,
+                "sadness": 5,
+                "surprise": 6,
+            }
+        )
+
     return df
 
-def read_feature(
-    path: str,
-    fold: Union[int, None],
-    name: str
-) -> torch.Tensor:
+
+def read_feature(path: str, fold: Union[int, None], name: str) -> torch.Tensor:
     """
     Reads the saved feature.
 
@@ -206,18 +190,15 @@ def read_feature(
         torch.Tensor: the read feature.
     """
     if not fold is None:
-        feature = torch.load(
-            os.path.join(path, f"fold{fold}", name)
-        )
+        feature = torch.load(os.path.join(path, f"fold{fold}", name))
     else:
-        feature = torch.load(
-            os.path.join(path, name)
-        )
-    
+        feature = torch.load(os.path.join(path, name))
+
     return feature
 
+
 def prepare_coraa_test_dataframe(
-    path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
+    path: str = "/media/greca/HD/Datasets/PROPOR 2022/",
 ) -> pd.DataFrame:
     """
     Prepares the CORAA's testing dataset to have the same structure as
@@ -231,18 +212,19 @@ def prepare_coraa_test_dataframe(
     """
     df = pd.read_csv(os.path.join(path, "test_ser_metadata.csv"), sep=",")
     df.columns = ["wav_file", "label", "file"]
-    df["file"] = df["file"].apply(lambda x: os.path.join(path, "test_ser", x))    
+    df["file"] = df["file"].apply(lambda x: os.path.join(path, "test_ser", x))
     return df.reset_index(drop=True)
 
+
 def create_ravdess_train_dataframe(
-    path: str = "/media/greca/HD/Datasets/RAVDESS/"
+    path: str = "/media/greca/HD/Datasets/RAVDESS/",
 ) -> pd.DataFrame:
     """
     Creates a RAVDESS's pandas DataFrame containing all the training files.
-    
+
     Args:
         path (str): the path to the CSV file.
-    
+
     Returns:
         df (pd.DataFrame): the pandas DataFrame.
     """
@@ -259,7 +241,7 @@ def create_ravdess_train_dataframe(
         for wav in wav_files:
             wav_file = os.path.basename(wav)
             label = wav_file.split("-")[2]
-            
+
             if label == "01":
                 label = "neutral"
             elif label == "02":
@@ -276,46 +258,44 @@ def create_ravdess_train_dataframe(
                 label = "disgust"
             elif label == "08":
                 label = "surprised"
-            
-            row = pd.DataFrame({
-                "file": [os.path.join(path, actor, wav)],
-                "label": [label],
-                "wav_file": [wav]
-            })
 
-            df = pd.concat(
-                [df, row],
-                axis=0
+            row = pd.DataFrame(
+                {
+                    "file": [os.path.join(path, actor, wav)],
+                    "label": [label],
+                    "wav_file": [wav],
+                }
             )
-    
+
+            df = pd.concat([df, row], axis=0)
+
     return df.reset_index(drop=True)
 
+
 def create_emodb_train_dataframe(
-    path: str = "/media/greca/HD/Datasets/EmoDB/"
+    path: str = "/media/greca/HD/Datasets/EmoDB/",
 ) -> pd.DataFrame:
     """
     Creates a EmoDB's pandas DataFrame containing all the training files.
-    
+
     Args:
         path (str): the path to the CSV file.
-    
+
     Returns:
         df (pd.DataFrame): the pandas DataFrame.
     """
     wav_files = [
-        file
-        for file in os.listdir(os.path.join(path, "wav"))
-        if file.endswith(".wav")
+        file for file in os.listdir(os.path.join(path, "wav")) if file.endswith(".wav")
     ]
     df = pd.DataFrame()
-    
+
     for wav in wav_files:
         wav_file = os.path.basename(wav)
         speaker_file = wav_file[:2]
         text_code = wav_file[2:5]
         label = wav_file[5].lower()
         version = wav_file[6]
-        
+
         if label == "w":
             label = "anger"
         elif label == "l":
@@ -330,45 +310,41 @@ def create_emodb_train_dataframe(
             label = "sadness"
         elif label == "n":
             label = "neutral"
-        
-        row = pd.DataFrame({
-            "file": [os.path.join(path, "wav", wav)],
-            "label": [label],
-            "wav_file": [wav]
-        })
-        
-        df = pd.concat(
-            [df, row],
-            axis=0
+
+        row = pd.DataFrame(
+            {
+                "file": [os.path.join(path, "wav", wav)],
+                "label": [label],
+                "wav_file": [wav],
+            }
         )
-    
+
+        df = pd.concat([df, row], axis=0)
+
     return df.reset_index(drop=True)
 
+
 def create_savee_train_dataframe(
-    path: str = "/media/greca/HD/Datasets/SAVEE/"
+    path: str = "/media/greca/HD/Datasets/SAVEE/",
 ) -> pd.DataFrame:
     """
     Creates a SAVEE's pandas DataFrame containing all the training files.
-    
+
     Args:
         path (str): the path to the CSV file.
-    
+
     Returns:
         df (pd.DataFrame): the pandas DataFrame.
     """
-    wav_files = [
-        file
-        for file in os.listdir(path)
-        if file.endswith(".wav")
-    ]
+    wav_files = [file for file in os.listdir(path) if file.endswith(".wav")]
     df = pd.DataFrame()
-    
+
     for wav in wav_files:
         wav_file = os.path.basename(wav)
         speaker_file = wav_file[:2]
         label = wav_file[3:]
         label = re.findall("[a-zA-Z]+", str(label))[0]
-        
+
         if label == "a":
             label = "anger"
         elif label == "d":
@@ -383,31 +359,27 @@ def create_savee_train_dataframe(
             label = "neutral"
         elif label == "su":
             label = "surprise"
-        
-        row = pd.DataFrame({
-            "file": [os.path.join(path, wav)],
-            "label": [label],
-            "wav_file": [wav]
-        })
-        
-        df = pd.concat(
-            [df, row],
-            axis=0
+
+        row = pd.DataFrame(
+            {"file": [os.path.join(path, wav)], "label": [label], "wav_file": [wav]}
         )
-    
+
+        df = pd.concat([df, row], axis=0)
+
     return df.reset_index(drop=True)
 
+
 def create_coraa_train_dataframe(
-    path: str = "/media/greca/HD/Datasets/PROPOR 2022/"
+    path: str = "/media/greca/HD/Datasets/PROPOR 2022/",
 ) -> pd.DataFrame:
     """
     Creates a CORAA's pandas DataFrame containing
     all the training files using the same structure as the
     `test_ser_metadata.csv` file.
-    
+
     Args:
         path (str): the path to the CSV file.
-    
+
     Returns:
         df (pd.DataFrame): the pandas DataFrame.
     """
@@ -417,33 +389,29 @@ def create_coraa_train_dataframe(
         if file.endswith(".wav")
     ]
     df = pd.DataFrame()
-    
+
     for wav in wav_files:
         wav_file = os.path.basename(wav)
         wav_file = wav_file.split("/")[0]
         label = wav_file.split("_")[-1].replace(".wav", "")
-        
-        row = pd.DataFrame({
-            "file": [os.path.join(path, "data_train/train", wav_file)],
-            "label": [label],
-            "wav_file": [wav_file]
-        })
-        
-        df = pd.concat(
-            [df, row],
-            axis=0
+
+        row = pd.DataFrame(
+            {
+                "file": [os.path.join(path, "data_train/train", wav_file)],
+                "label": [label],
+                "wav_file": [wav_file],
+            }
         )
-    
+
+        df = pd.concat([df, row], axis=0)
+
     return df.reset_index(drop=True)
 
-def save(
-    path: str,
-    name: str,
-    tensor: torch.Tensor
-) -> None:
+
+def save(path: str, name: str, tensor: torch.Tensor) -> None:
     """
     Saves a PyTorch tensor.
-    
+
     Args:
         path (str): The output path.
         name (str): The file name.
@@ -452,12 +420,9 @@ def save(
     os.makedirs(path, exist_ok=True)
     path = os.path.join(path, f"{name}.pth")
     torch.save(tensor, path)
-    
-def read_feature(
-    path: str,
-    name: str,
-    fold: Optional[int] = None
-) -> torch.Tensor:
+
+
+def read_feature(path: str, name: str, fold: Optional[int] = None) -> torch.Tensor:
     """
     Reads the saved feature.
 
@@ -470,15 +435,12 @@ def read_feature(
         torch.Tensor: the read feature.
     """
     if not fold is None:
-        feature = torch.load(
-            os.path.join(path, f"fold{fold}", name)
-        )
+        feature = torch.load(os.path.join(path, f"fold{fold}", name))
     else:
-        feature = torch.load(
-            os.path.join(path, name)
-        )
-    
+        feature = torch.load(os.path.join(path, name))
+
     return feature
+
 
 def feature_extraction_pipeline(
     dataset: str,
@@ -488,7 +450,7 @@ def feature_extraction_pipeline(
     k_fold: int,
     output_path: str,
     input_path: str,
-    apply_one_hot_encoder: bool = True
+    apply_one_hot_encoder: bool = True,
 ) -> None:
     """
     Feature extraction pipeline.
@@ -506,35 +468,21 @@ def feature_extraction_pipeline(
     """
     # reading the training dataset
     if dataset == "coraa":
-        train_df = create_coraa_train_dataframe(
-            path=input_path
-        )
+        train_df = create_coraa_train_dataframe(path=input_path)
     elif dataset == "emodb":
-        train_df = create_emodb_train_dataframe(
-            path=input_path
-        )
+        train_df = create_emodb_train_dataframe(path=input_path)
     elif dataset == "ravdess":
-        train_df = create_ravdess_train_dataframe(
-            path=input_path
-        )
+        train_df = create_ravdess_train_dataframe(path=input_path)
     elif dataset == "savee":
-        train_df = create_savee_train_dataframe(
-            path=input_path
-        )
-          
-    train_df = labels_mapping(
-        df=train_df,
-        dataset=dataset
-    )
-        
+        train_df = create_savee_train_dataframe(path=input_path)
+
+    train_df = labels_mapping(df=train_df, dataset=dataset)
+
     # preprocessing the training dataset
     X_train, y_train = processing(
-        df=train_df,
-        to_mono=to_mono,
-        sample_rate=sample_rate,
-        max_samples=max_samples
+        df=train_df, to_mono=to_mono, sample_rate=sample_rate, max_samples=max_samples
     )
-    
+
     # splitting the training dataset into training and validation (and saving)
     split_data(
         X=X_train,
@@ -542,41 +490,34 @@ def feature_extraction_pipeline(
         dataset=dataset,
         output_path=output_path,
         k_fold=k_fold,
-        apply_one_hot_encoder=apply_one_hot_encoder
+        apply_one_hot_encoder=apply_one_hot_encoder,
     )
-    
+
     # reading the test dataset (only for CORAA)
     if dataset == "coraa":
-        test_df = prepare_coraa_test_dataframe(
-            path=input_path
-        )
-        test_df = labels_mapping(
-            df=test_df,
-            dataset=dataset
-        )
-            
+        test_df = prepare_coraa_test_dataframe(path=input_path)
+        test_df = labels_mapping(df=test_df, dataset=dataset)
+
         # preprocessing the test dataset
         X_test, y_test = processing(
             df=test_df,
             to_mono=to_mono,
             sample_rate=sample_rate,
-            max_samples=max_samples
+            max_samples=max_samples,
         )
 
         if apply_one_hot_encoder:
             num_classes = 3
             y_test = one_hot_encoder(labels=y_test, num_classes=num_classes)
-            
+
         # saving the test features
         folder_path = os.path.join(output_path, dataset)
-            
+
         save(path=folder_path, name="X_test", tensor=X_test)
         save(path=folder_path, name="y_test", tensor=y_test)
 
-def read_features_files(
-    k_fold: Union[int, None],
-    feat_path: str
-) -> Tuple[List, List]:
+
+def read_features_files(k_fold: Union[int, None], feat_path: str) -> Tuple[List, List]:
     """
     Read the features files.
 
@@ -589,7 +530,7 @@ def read_features_files(
     """
     training_data = []
     validation_data = []
-    
+
     # reading all the previously extracted features
     if not k_fold is None:
         for fold in range(k_fold):
@@ -599,28 +540,28 @@ def read_features_files(
                 fold=fold,
                 name="X_train.pth",
             )
-            
+
             y_train = read_feature(
                 path=feat_path,
                 fold=fold,
                 name="y_train.pth",
             )
-            
+
             training_data.append((X_train, y_train))
-            
+
             # reading the validation audio features
             X_valid = read_feature(
                 path=feat_path,
                 fold=fold,
                 name="X_valid.pth",
             )
-            
+
             y_valid = read_feature(
                 path=feat_path,
                 fold=fold,
                 name="y_valid.pth",
             )
-            
+
             validation_data.append((X_valid, y_valid))
     else:
         # reading training audio features
@@ -628,25 +569,25 @@ def read_features_files(
             path=feat_path,
             name="X_train.pth",
         )
-        
+
         y_train = read_feature(
             path=feat_path,
             name="y_train.pth",
         )
-        
+
         training_data.append((X_train, y_train))
-        
+
         # reading the validation audio features
         X_valid = read_feature(
             path=feat_path,
             name="X_valid.pth",
         )
-        
+
         y_valid = read_feature(
             path=feat_path,
             name="y_valid.pth",
         )
-        
+
         validation_data.append((X_valid, y_valid))
-    
+
     return training_data, validation_data
