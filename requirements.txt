@@ -11,7 +11,7 @@ seaborn==0.12.2
 setuptools==66.0.0
 
 --extra-index-url https://download.pytorch.org/whl/cu117
-torch==1.13.1+cu117
+torch==2.2.0
 torch-audiomentations==0.11.0
 torchaudio==0.13.1+cu117
 torchlibrosa==0.1.0
