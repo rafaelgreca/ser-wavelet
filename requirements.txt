@@ -1,0 +1,17 @@
+audiomentations==0.30.0
+jupyter==1.0.0
+matplotlib==3.6.3
+notebook==6.5.2
+numpy==1.22.3
+pandas==1.5.2
+PyWavelets==1.4.1
+requests==2.31.0
+scipy==1.10.1
+seaborn==0.12.2
+setuptools==66.0.0
+
+--extra-index-url https://download.pytorch.org/whl/cu113/torch_stable.html
+torch==1.13.1
+torch-audiomentations==0.11.0
+torchaudio==0.13.1
+torchlibrosa==0.1.0

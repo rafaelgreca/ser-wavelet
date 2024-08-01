@@ -1,8 +1,8 @@
-# Speech Emotion Recognition using Deep Learning and Wavelet Transform
+# Speech Emotion Recognition using Deep Learning and Discrete Wavelet Transform
 
-Repository dedicated to the developed solution for the end-of-course work of University of São Paulo's [Master in Business Administration (MBA) in Artificial Intelligence and Big Data](https://mba.iabigdata.icmc.usp.br/) program. The solution main focus is to tackle the Speech Emotion Recognition task and is composed by a Convolutional Neural Network based on [PANNs](https://github.com/qiuqiangkong/audioset_tagging_cnn) trained using Mel Spectrogram and Discrete Wavelet Transform.
+Repository dedicated to the developed solution for the end-of-course work of the University of São Paulo's [Master in Business Administration (MBA) in Artificial Intelligence and Big Data](https://mba.iabigdata.icmc.usp.br/) program. The solution's main focus is to tackle the Speech Emotion Recognition task and is composed of a Convolutional Neural Network based on [PANNs](https://github.com/qiuqiangkong/audioset_tagging_cnn) trained using Mel Spectrogram and Discrete Wavelet Transform.
 
-How to cite:
+How to cite the paper (soon):
 
 ...
 
@@ -92,26 +92,26 @@ Before continuing, to the code work properly you need to download the datasets c
 │   │   └── utils.py
 │   ├── processing.py
 │   └── utils.py
+├── requirements.txt
 ├── test.py
 └── train.py
 ```
 
 Explaining briefly the main folders and files:
 
-- `config`: where the model and feature extraction configurations files (**MUST** be in a JSON format) that will be used as inputs arguments are saved on;
-- `examples`: where the configuration files examples are saved on (how to use different features, data augmentation techniques, and so on);
-- `notebooks`: where the notebooks used to visualize the training/validation step, do the exploratory data analysis (EDA) and to create the analysis used for the thesis writing are saved on;
-- `requirements`: where the requirements files for the installation step are saved on;
-- `src`: where the core functions are implemented, such as: the data augmentation, feature extraction, audios preprocessing steps, and the models/datasets creation;
-- `test.py`: the main file responsible to inference the model on new data;
-- `train.py`: the main file responsible to train the model.
+- `config`: where the model and feature extraction configurations files (**MUST** be in a JSON format) that will be used as input arguments are saved on;
+- `examples`: where the configuration files examples are saved (how to use different features, data augmentation techniques, and so on);
+- `notebooks`: where the notebooks used to visualize the training/validation step, do the exploratory data analysis (EDA) and create the analysis used for the thesis writing are saved;
+- `src`: where the core functions are implemented, such as the data augmentation, feature extraction, audio preprocessing steps, and the models/datasets creation;
+- `test.py`: the main file responsible for inference of the model on new data;
+- `train.py`: the main file responsible for training the model.
 
 ### Inputs Parameters
 
 The following arguments **MUST** be inside the configuration JSON file (exactly as structured in the files inside the `config` folder).
 
 - `input_path`: the dataset's folder path (**MUST** exists);
-- `output_path`: the folder path where the extracted features will be saved on (if the folder doesn't exist, then it will be created);
+- `output_path`: the folder path where the extracted features will be saved (if the folder doesn't exist, then it will be created);
 - `sample_rate`: the audio's sampling rate. E.g.: 8000;
 - `dataset`: which dataset will be used ('coraa', 'savee', 'emodb' or 'ravdess'). **MUST** be written in lowercase;
 - `mode`: which mode will be run ('mode\_1' or 'mode\_2'). Check the image below for more details. **MUST** be written in lowercase;
