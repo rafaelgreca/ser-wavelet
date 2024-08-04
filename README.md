@@ -28,8 +28,7 @@ P.S.: if you are interested in modifying the code as you desire, it's better to 
 
 Finally, you need to create a conda environment (or any other virtual environment solution, like virtualenv) and install the requirements. This can be done using `pip` with the following command:
 ```bash
-conda create --name ser python=3.8.10
-conda activate ser
+conda create --name ser python=3.8.10 && conda activate ser
 pip install -r requirements.txt
 ```
 
@@ -37,7 +36,7 @@ pip install -r requirements.txt
 
 Build the image using the following command:
 ```bash
-docker build -d -t ser-wavelet -f Dockerfile .
+docker build -t ser-wavelet -f Dockerfile .
 ```
 
 ## Getting Started

@@ -63,7 +63,7 @@ def split_data(
         apply_one_hot_encoder (bool, optional): if the one hot encoder will be applied. Defaults to True.
     """
     skf = None
-    if dataset == "propor2022":
+    if dataset == "coraa":
         num_classes = 3
     elif dataset == "emodb":
         num_classes = 7

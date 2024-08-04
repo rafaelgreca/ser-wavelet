@@ -1,5 +1,5 @@
 {
-    "input_path": "/media/greca/HD/Datasets/PROPOR 2022",
+    "input_path": "/media/greca/HD/Datasets/CORAA",
     "output_path": "./features",
     "sample_rate": 8000,
     "dataset": "coraa",
@@ -33,7 +33,7 @@
     "model": {
         "name": "qiuqiangkong",
         "use_gpu": true,
-        "output_path": "./checkpoints2",
+        "output_path": "./checkpoints",
         "batch_size": 16,
         "learning_rate": 0.001,
         "epochs": 100,
