@@ -2,9 +2,11 @@
 
 Repository dedicated to the developed solution for the end-of-course work of the University of São Paulo's [Master in Business Administration (MBA) in Artificial Intelligence and Big Data](https://mba.iabigdata.icmc.usp.br/) program. The solution's main focus is to tackle the Speech Emotion Recognition task and is composed of a Convolutional Neural Network based on [PANNs](https://github.com/qiuqiangkong/audioset_tagging_cnn) trained using Mel Spectrogram and Discrete Wavelet Transform.
 
-How to cite the paper (soon):
+You can read the full paper for free [here](https://seer.ufrgs.br/index.php/rita/article/view/143123).
 
-...
+How to cite the paper:
+
+Greca Vieira, R., & Alaniz Macedo, A. (2025). A Speech Emotion Recognition Approach Using Discrete Wavelet Transform and Deep Learning Techniques in a Brazilian Portuguese Corpus. Revista De Informática Teórica E Aplicada, 32(3), 54–65. https://doi.org/10.22456/2175-2745.143123
 
 ## Table of Contents
 
